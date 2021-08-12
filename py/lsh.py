@@ -1,10 +1,10 @@
 '''
-This file is part of an ICSE'18 submission that is currently under review. 
+This file is part of an ICSE'18 submission that is currently under review.
 For more information visit: https://github.com/icse18-FAST/FAST.
-    
+
 This is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as 
-published by the Free Software Foundation, either version 3 of the 
+it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
 
 This software is distributed in the hope that it will be useful,
@@ -37,7 +37,7 @@ def kShingles(TS, k):
     for tcID in TS:
         tc = TS[tcID]
         shingle = set()
-        for i in xrange(len(tc) - k + 1):
+        for i in range(len(tc) - k + 1):
             shingle.add(hash(tc[i:i + k]))
         shingles[tcID] = shingle
 
@@ -49,7 +49,7 @@ def kShingles(TS, k):
 
 def hashFamily(i):
     def hashMember(x):
-        return xxhash.xxh64(x, seed=37 * (2 * i + 1)).digest()
+        return xxhash.xxh64(x, seed=37 * (2 * i + 1)).hexdigest()
 
     return hashMember
 
@@ -65,9 +65,9 @@ def tcMinhashing(test_case, hash_functions):
     n = len(hash_functions)
     tc_ID, tc_shingles = test_case
     # initialized to max_value ('ffffffff') to correctly compute the min
-    tc_signature = ["ffffffff" for i in xrange(n)]
+    tc_signature = ["ffffffff" for i in range(n)]
     for tc_shingle in tc_shingles:
-        for i in xrange(n):
+        for i in range(n):
             tc_hash = hash_functions[i](str(tc_shingle))
             if tc_hash < tc_signature[i]:
                 tc_signature[i] = tc_hash
@@ -145,7 +145,7 @@ def jDistance(a, b):
 
 def jSimilarityEstimate(s1, s2):
     assert(len(s1) == len(s2))
-    return sum([1 for i in xrange(len(s1)) if s1[i] == s2[i]]) / float(len(s1))
+    return sum([1 for i in range(len(s1)) if s1[i] == s2[i]]) / float(len(s1))
 
 def jDistanceEstimate(s1, s2):
     return 1.0 - jSimilarityEstimate(s1, s2)

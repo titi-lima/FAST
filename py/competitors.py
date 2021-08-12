@@ -1,10 +1,10 @@
 '''
-This file is part of an ICSE'18 submission that is currently under review. 
+This file is part of an ICSE'18 submission that is currently under review.
 For more information visit: https://github.com/icse18-FAST/FAST.
-    
+
 This is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as 
-published by the Free Software Foundation, either version 3 of the 
+it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
 
 This software is distributed in the hope that it will be useful,
@@ -24,6 +24,7 @@ along with this source.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
 from collections import OrderedDict
+from functools import reduce
 from pickle import dump, load
 from struct import pack, unpack
 import bz2
@@ -84,12 +85,12 @@ def gt(input_file):
         TS = OrderedDict(shuffled)
         return TS
 
-    ptime_start = time.clock()
+    ptime_start = time.perf_counter()
 
     TCS = loadTestSuite(input_file)
     TS = OrderedDict(sorted(TCS.items(), key=lambda t: -t[1]))
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return 0.0, ptime, TS.keys()
 
@@ -104,7 +105,7 @@ def ga(input_file):
                 s, uncs_s = ui, uncs
         return s
 
-    ptime_start = time.clock()
+    ptime_start = time.perf_counter()
 
     TCS = loadTestSuite(input_file)
     TS = OrderedDict(sorted(TCS.items(), key=lambda t: -len(t[1])))
@@ -124,7 +125,7 @@ def ga(input_file):
         Cg = Cg | U[s]
         del U[s]
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return 0.0, ptime, P[1:]
 
@@ -162,7 +163,7 @@ def artd(input_file):
 
     # # # # # # # # # # # # # # # # # # # # # #
 
-    ptime_start = time.clock()
+    ptime_start = time.perf_counter()
 
     TS = loadTestSuite(input_file)
     U = TS.copy()
@@ -187,7 +188,7 @@ def artd(input_file):
         del U[s]
         C = C - set([s])
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return 0.0, ptime, P[1:]
 
@@ -229,7 +230,7 @@ def artf(input_file):
 
     # # # # # # # # # # # # # # # # # # # # # #
 
-    ptime_start = time.clock()
+    ptime_start = time.perf_counter()
 
     TS = loadTestSuite(input_file)
     U = TS.copy()
@@ -254,7 +255,7 @@ def artf(input_file):
         del U[s]
         C = C - set([s])
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return 0.0, ptime, P[1:]
 
@@ -287,7 +288,7 @@ def ga_s(input_file):
 
         # store spanning file
         with open(spanfile, "w") as fout:
-            for tcID in xrange(1, len(TCS)):
+            for tcID in range(1, len(TCS)):
                 fout.write(" ".join(TCS[tcID]) + "\n")
 
     def select(TS, U, Cg):
@@ -303,7 +304,7 @@ def ga_s(input_file):
     spanfile = input_file.replace(".txt", ".span")
     spantimefile = "{}_spantime.txt".format(input_file.split(".")[0])
     if not os.path.exists(spanfile):
-        # time.clock() does not consider subprocess call time
+        # time.perf_counter() does not consider subprocess call time
         span_t = time.time()
         storeSpanningFile(input_file, spanfile)
         stime = time.time() - span_t
@@ -313,7 +314,7 @@ def ga_s(input_file):
         with open(spantimefile, "r") as fin:
             stime = eval(fin.read().replace("\n", ""))
 
-    ptime_start = time.clock()
+    ptime_start = time.perf_counter()
     TCS = loadTestSuite(spanfile)
 
     TS = OrderedDict(sorted(TCS.items(), key=lambda t: -len(t[1])))
@@ -340,7 +341,7 @@ def ga_s(input_file):
         Cg = Cg | U[s]
         del U[s]
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return stime, ptime, P[1:]
 
@@ -425,17 +426,17 @@ def str_(input_file):
 
     sigfile = input_file.replace(".txt", "___.pickle").replace("___", "_distmatrix")
     if not os.path.exists(sigfile):
-        ledru_t = time.clock()
+        ledru_t = time.perf_counter()
         storePairwiseDistance(TCS, sigfile)
-        ledru_time = time.clock() - ledru_t
+        ledru_time = time.perf_counter() - ledru_t
         with open("{}_sigtime.txt".format(input_file.split(".")[0]), "w") as fout:
             fout.write(repr(ledru_time))
     else:
         with open("{}_sigtime.txt".format(input_file.split(".")[0]), "r") as fin:
             ledru_time = eval(fin.read().replace("\n", ""))
 
-    ptime_start = time.clock()
-    load_time_start = time.clock()
+    ptime_start = time.perf_counter()
+    load_time_start = time.perf_counter()
     D = loadPairwiseDistance(sigfile)
 
     P2 = removeDuplicates(TCS)
@@ -456,7 +457,7 @@ def str_(input_file):
         P1.append(s)
         del TCS[s]
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return ledru_time, ptime, P1 + P2
 
@@ -494,7 +495,7 @@ def i_tsd(input_file):
     # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     stime = 0.0
-    ptime_start = time.clock()
+    ptime_start = time.perf_counter()
     TCS = loadTestSuite(input_file)
 
     P = [0]
@@ -511,6 +512,6 @@ def i_tsd(input_file):
         P.append(s)
         del TCS[s]
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
     return stime, ptime, P[1:]

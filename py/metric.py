@@ -1,10 +1,10 @@
 '''
-This file is part of an ICSE'18 submission that is currently under review. 
+This file is part of an ICSE'18 submission that is currently under review.
 For more information visit: https://github.com/icse18-FAST/FAST.
-    
+
 This is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as 
-published by the Free Software Foundation, either version 3 of the 
+it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
 
 This software is distributed in the hope that it will be useful,
@@ -38,7 +38,7 @@ def apfd(prioritization, fault_matrix, javaFlag):
         # key=version, val=[faulty_tcs]
         faults_dict = getFaultDetected(fault_matrix)
         apfds = []
-        for v in xrange(1, len(faults_dict)+1):
+        for v in range(1, len(faults_dict)+1):
             faulty_tcs = set(faults_dict[v])
             numerator = 0.0  # numerator of APFD
             position = 1

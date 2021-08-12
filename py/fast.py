@@ -1,10 +1,10 @@
 '''
-This file is part of an ICSE'18 submission that is currently under review. 
+This file is part of an ICSE'18 submission that is currently under review.
 For more information visit: https://github.com/icse18-FAST/FAST.
-    
+
 This is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as 
-published by the Free Software Foundation, either version 3 of the 
+it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
 
 This software is distributed in the hope that it will be useful,
@@ -43,14 +43,17 @@ def loadTestSuite(input_file, bbox=False, k=5):
             else:
                 TS[tcID] = set(tc[:-1].split())
             tcID += 1
-    shuffled = TS.items()
+    shuffled = list(TS.keys())
     random.shuffle(shuffled)
-    TS = OrderedDict(shuffled)
+    newTS = OrderedDict()
+    for key in shuffled:
+        newTS[key] = TS[key]
     if bbox:
-        TS = lsh.kShingles(TS, k)
-    return TS
+        newTS = lsh.kShingles(TS, k)
+    return newTS
 
 
+# TODO: just store a single pickle file for each test
 def storeSignatures(input_file, sigfile, hashes, bbox=False, k=5):
     with open(sigfile, "w") as sigfile:
         with open(input_file) as fin:
@@ -60,7 +63,7 @@ def storeSignatures(input_file, sigfile, hashes, bbox=False, k=5):
                     # shingling
                     tc_ = tc[:-1]
                     tc_shingles = set()
-                    for i in xrange(len(tc_) - k + 1):
+                    for i in range(len(tc_) - k + 1):
                         tc_shingles.add(hash(tc_[i:i + k]))
 
                     sig = lsh.tcMinhashing((tcID, set(tc_shingles)), hashes)
@@ -68,12 +71,13 @@ def storeSignatures(input_file, sigfile, hashes, bbox=False, k=5):
                     tc_ = tc[:-1].split()
                     sig = lsh.tcMinhashing((tcID, set(tc_)), hashes)
                 for hash_ in sig:
-                    sigfile.write(repr(unpack('>d', hash_)[0]))
+                    sigfile.write(hash_)
                     sigfile.write(" ")
                 sigfile.write("\n")
                 tcID += 1
 
 
+# TODO: just load a single pickle file for each test
 def loadSignatures(input_file):
     """INPUT
     (str)input_file: path of input file
@@ -81,20 +85,20 @@ def loadSignatures(input_file):
     OUTPUT
     (dict)TS: key=tc_ID, val=set(covered lines), sigtime"""
     sig = {}
-    start = time.clock()
+    start = time.perf_counter()
     with open(input_file, "r") as fin:
         tcID = 1
         for tc in fin:
-            sig[tcID] = [pack('>d', float(i)) for i in tc[:-1].split()]
+            sig[tcID] = [i.strip() for i in tc[:-1].split()]
             tcID += 1
-    return sig, time.clock() - start
+    return sig, time.perf_counter() - start
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 # lsh + pairwise comparison with candidate set
-def fast_pw(input_file, r, b, bbox=False, k=5, memory=False):
+def fast_pw(input_file, r, b, bbox=False, k=5, memory=False, B=0):
     """INPUT
     (str)input_file: path of input file
     (int)r: number of rows
@@ -108,35 +112,38 @@ def fast_pw(input_file, r, b, bbox=False, k=5, memory=False):
     """
     n = r * b  # number of hash functions
 
-    hashes = [lsh.hashFamily(i) for i in xrange(n)]
+    hashes = [lsh.hashFamily(i) for i in range(n)]
 
     if memory:
         test_suite = loadTestSuite(input_file, bbox=bbox, k=k)
         # generate minhashes signatures
-        mh_t = time.clock()
+        mh_t = time.perf_counter()
         tcs_minhashes = {tc[0]: lsh.tcMinhashing(tc, hashes)
                          for tc in test_suite.items()}
-        mh_time = time.clock() - mh_t
-        ptime_start = time.clock()
+        mh_time = time.perf_counter() - mh_t
 
     else:
         # loading input file and generating minhashes signatures
         sigfile = input_file.replace(".txt", ".sig")
         sigtimefile = "{}_sigtime.txt".format(input_file.split(".")[0])
         if not os.path.exists(sigfile):
-            mh_t = time.clock()
+            mh_t = time.perf_counter()
             storeSignatures(input_file, sigfile, hashes, bbox, k)
-            mh_time = time.clock() - mh_t
+            mh_time = time.perf_counter() - mh_t
             with open(sigtimefile, "w") as fout:
                 fout.write(repr(mh_time))
         else:
             with open(sigtimefile, "r") as fin:
                 mh_time = eval(fin.read().replace("\n", ""))
 
-        ptime_start = time.clock()
         tcs_minhashes, load_time = loadSignatures(sigfile)
 
+    ptime_start = time.perf_counter()
     tcs = set(tcs_minhashes.keys())
+
+    # budget B modification
+    if B == 0:
+        B = len(tcs)
 
     BASE = 0.5
     SIZE = int(len(tcs)*BASE) + 1
@@ -146,9 +153,10 @@ def fast_pw(input_file, r, b, bbox=False, k=5, memory=False):
     prioritized_tcs = [0]
 
     # First TC
+
     selected_tcs_minhash = lsh.tcMinhashing((0, set()), hashes)
-    first_tc = random.choice(tcs_minhashes.keys())
-    for i in xrange(n):
+    first_tc = random.choice(list(tcs_minhashes.keys()))
+    for i in range(n):
         if tcs_minhashes[first_tc][i] < selected_tcs_minhash[i]:
             selected_tcs_minhash[i] = tcs_minhashes[first_tc][i]
     prioritized_tcs.append(first_tc)
@@ -189,23 +197,29 @@ def fast_pw(input_file, r, b, bbox=False, k=5, memory=False):
                 if dist > max_dist:
                     selected_tc, max_dist = candidate, dist
 
-        for i in xrange(n):
+        for i in range(n):
             if tcs_minhashes[selected_tc][i] < selected_tcs_minhash[i]:
                 selected_tcs_minhash[i] = tcs_minhashes[selected_tc][i]
 
         prioritized_tcs.append(selected_tc)
+
+        # select budget B
+        if len(prioritized_tcs) >= B+1:
+            break
+
         tcs -= set([selected_tc])
         del tcs_minhashes[selected_tc]
 
-    ptime = time.clock() - ptime_start
+    ptime = time.perf_counter() - ptime_start
 
-    return mh_time, ptime, prioritized_tcs[1:]
+    max_ts_size = sum((1 for line in open(input_file)))
+    return mh_time, ptime, prioritized_tcs[1:max_ts_size]
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-def fast_(input_file, selsize, r, b, bbox=False, k=5, memory=False):
+def fast_(input_file, selsize, r, b, bbox=False, k=5, memory=False, B=0):
     """INPUT
     (str)input_file: path of input file
     (fun)selsize: size of candidate set
@@ -220,35 +234,38 @@ def fast_(input_file, selsize, r, b, bbox=False, k=5, memory=False):
     """
     n = r * b  # number of hash functions
 
-    hashes = [lsh.hashFamily(i) for i in xrange(n)]
+    hashes = [lsh.hashFamily(i) for i in range(n)]
 
     if memory:
         test_suite = loadTestSuite(input_file, bbox=bbox, k=k)
         # generate minhashes signatures
-        mh_t = time.clock()
+        mh_t = time.perf_counter()
         tcs_minhashes = {tc[0]: lsh.tcMinhashing(tc, hashes)
                          for tc in test_suite.items()}
-        mh_time = time.clock() - mh_t
-        ptime_start = time.clock()
+        mh_time = time.perf_counter() - mh_t
 
     else:
         # loading input file and generating minhashes signatures
         sigfile = input_file.replace(".txt", ".sig")
         sigtimefile = "{}_sigtime.txt".format(input_file.split(".")[0])
         if not os.path.exists(sigfile):
-            mh_t = time.clock()
+            mh_t = time.perf_counter()
             storeSignatures(input_file, sigfile, hashes, bbox, k)
-            mh_time = time.clock() - mh_t
+            mh_time = time.perf_counter() - mh_t
             with open(sigtimefile, "w") as fout:
                 fout.write(repr(mh_time))
         else:
             with open(sigtimefile, "r") as fin:
                 mh_time = eval(fin.read().replace("\n", ""))
 
-        ptime_start = time.clock()
         tcs_minhashes, load_time = loadSignatures(sigfile)
 
+    ptime_start = time.perf_counter()
     tcs = set(tcs_minhashes.keys())
+
+    # budget B modification
+    if B == 0:
+        B = len(tcs)
 
     BASE = 0.5
     SIZE = int(len(tcs)*BASE) + 1
@@ -258,9 +275,10 @@ def fast_(input_file, selsize, r, b, bbox=False, k=5, memory=False):
     prioritized_tcs = [0]
 
     # First TC
+
     selected_tcs_minhash = lsh.tcMinhashing((0, set()), hashes)
-    first_tc = random.choice(tcs_minhashes.keys())
-    for i in xrange(n):
+    first_tc = random.choice(list(tcs_minhashes.keys()))
+    for i in range(n):
         if tcs_minhashes[first_tc][i] < selected_tcs_minhash[i]:
             selected_tcs_minhash[i] = tcs_minhashes[first_tc][i]
     prioritized_tcs.append(first_tc)
@@ -297,14 +315,24 @@ def fast_(input_file, selsize, r, b, bbox=False, k=5, memory=False):
         selected_tc_set = random.sample(tuple(candidates), to_sel)
 
         for selected_tc in selected_tc_set:
-            for i in xrange(n):
+            for i in range(n):
                 if tcs_minhashes[selected_tc][i] < selected_tcs_minhash[i]:
                     selected_tcs_minhash[i] = tcs_minhashes[selected_tc][i]
 
             prioritized_tcs.append(selected_tc)
+
+            # select budget B
+            if len(prioritized_tcs) >= B+1:
+                break
+
             tcs -= set([selected_tc])
             del tcs_minhashes[selected_tc]
 
-    ptime = time.clock() - ptime_start
+        # select budget B
+        if len(prioritized_tcs) >= B+1:
+            break
 
-    return mh_time, ptime, prioritized_tcs[1:]
+    ptime = time.perf_counter() - ptime_start
+
+    max_ts_size = sum((1 for line in open(input_file)))
+    return mh_time, ptime, prioritized_tcs[1:max_ts_size]
