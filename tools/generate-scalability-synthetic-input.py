@@ -60,7 +60,7 @@ if __name__ == '__main__':
     with open(filename, "w") as fout:
         for tc in range(1, ts_size + 1):
             line = ""
-            mincov, maxcov = minp * tc_size, maxp * tc_size
+            mincov, maxcov = int(minp * tc_size), int(maxp * tc_size)
             cov = set()
             for _ in range(random.randrange(mincov, maxcov)):
                 cov.add(random.randint(1, tc_size + 1))
