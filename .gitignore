@@ -1,0 +1,5 @@
+output/
+!output/README.md
+__pycache__/
+input/
+!input/README.md
