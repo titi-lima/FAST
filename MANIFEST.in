@@ -1,0 +1,21 @@
+include README.md
+include README_LIBRARY.md
+include LICENSE
+include requirements.txt
+include pyproject.toml
+include Makefile
+
+# Include all Python files in fast_tcp package
+recursive-include fast_tcp *.py
+
+# Include documentation and examples
+recursive-include tools *.py
+recursive-include results *.md *.tsv *.png *.pdf *.zip
+
+# Exclude build artifacts and caches
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude .git*
+global-exclude .pytest_cache 
