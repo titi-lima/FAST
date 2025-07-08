@@ -4,3 +4,24 @@ __pycache__/
 input/
 !input/README.md
 *.egg-info/
+
+# Build and distribution
+build/
+dist/
+*.egg
+.eggs/
+
+# Development
+.pytest_cache/
+.coverage
+htmlcov/
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+.DS_Store
+Thumbs.db
+
+PACKAGE_SETUP_SUMMARY.md

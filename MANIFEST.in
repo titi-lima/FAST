@@ -10,6 +10,7 @@ recursive-include fast_tcp *.py
 
 # Include documentation and examples
 recursive-include tools *.py
+recursive-include scripts *.py
 recursive-include results *.md *.tsv *.png *.pdf *.zip
 
 # Exclude build artifacts and caches
