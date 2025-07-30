@@ -5,315 +5,290 @@ Command-line interface for FAST: Scalable Similarity-based Test Case Prioritizat
 import argparse
 import sys
 import os
+import glob
+import shutil
+import tempfile
+import pickle
 from pathlib import Path
 
-from . import prioritize, scalability
+from . import prioritize
 
 
 def create_parser():
     """Create the main argument parser."""
     parser = argparse.ArgumentParser(
-        description="FAST: Scalable Similarity-based Test Case Prioritization",
+        description="Test Case Prioritization Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  fast-tcp prioritize flex_v3 bbox FAST-pw 50
-  fast-tcp scalability 1000 small FAST-pw
-  fast-tcp generate-input 1000 small
-  fast-tcp plot-results small prioritization FAST-pw FAST-one
+  tcp-prioritize --test-dir /path/to/tests --algo FAST-pw --entity bbox
+  tcp-prioritize --test-dir ./my_tests --algo FAST-pw --entity function --repetitions 10
+  tcp-prioritize --test-dir /tests --algo STR --entity bbox --output-dir ./results
         """,
     )
 
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # Prioritize command
-    prioritize_parser = subparsers.add_parser(
-        "prioritize",
-        help="Run test case prioritization",
-        description="Run test case prioritization on specified datasets",
+    # Main prioritization arguments (no subcommands needed)
+    parser.add_argument(
+        "--test-dir",
+        required=True,
+        help="Directory containing test files to prioritize",
     )
-    prioritize_parser.add_argument(
-        "dataset",
+    parser.add_argument(
+        "--algo",
+        required=True,
         choices=[
-            "flex_v3",
-            "grep_v3",
-            "gzip_v1",
-            "make_v1",
-            "sed_v6",
-            "closure_v0",
-            "lang_v0",
-            "math_v0",
-            "chart_v0",
-            "time_v0",
+            "FAST-pw",
+            "FAST-one",
+            "FAST-log",
+            "FAST-sqrt",
+            "FAST-all",
+            "STR",
+            "I-TSD",
+            "ART-D",
+            "ART-F",
+            "GT",
+            "GA",
+            "GA-S",
         ],
-        help="Test suite to prioritize",
+        help="Algorithm used for prioritization",
     )
-    prioritize_parser.add_argument(
-        "entity",
+    parser.add_argument(
+        "--entity",
+        required=True,
         choices=["bbox", "function", "branch", "line"],
         help="BB or WB (function, branch, line) prioritization",
     )
-    prioritize_parser.add_argument(
-        "algorithm",
-        choices=[
-            "FAST-pw",
-            "FAST-one",
-            "FAST-log",
-            "FAST-sqrt",
-            "FAST-all",
-            "STR",
-            "I-TSD",
-            "ART-D",
-            "ART-F",
-            "GT",
-            "GA",
-            "GA-S",
-        ],
-        help="Algorithm used for prioritization",
+    parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=1,
+        help="Number of prioritizations to compute (default: 1)",
     )
-    prioritize_parser.add_argument(
-        "repetitions", type=int, help="Number of prioritizations to compute"
+    parser.add_argument(
+        "--output-dir",
+        help="Output directory for results (default: current directory + 'output')",
     )
-
-    # Scalability command
-    scalability_parser = subparsers.add_parser(
-        "scalability",
-        help="Run scalability experiments",
-        description="Measure scalability of TCP approaches",
+    parser.add_argument(
+        "--pattern",
+        default="*.txt",
+        help="File pattern to match test files (default: *.txt)",
     )
-    scalability_parser.add_argument(
-        "tssize", type=int, help="Number of test cases in the test suite"
-    )
-    scalability_parser.add_argument(
-        "tcsize",
-        choices=["small", "medium", "large"],
-        help="Size of the test cases (small, medium, large)",
-    )
-    scalability_parser.add_argument(
-        "algorithm",
-        choices=[
-            "FAST-pw",
-            "FAST-one",
-            "FAST-log",
-            "FAST-sqrt",
-            "FAST-all",
-            "STR",
-            "I-TSD",
-            "ART-D",
-            "ART-F",
-            "GT",
-            "GA",
-            "GA-S",
-        ],
-        help="Algorithm used for prioritization",
-    )
-
-    # Generate input command
-    generate_parser = subparsers.add_parser(
-        "generate-input",
-        help="Generate synthetic input for scalability experiments",
-        description="Generate synthetic test suites for scalability testing",
-    )
-    generate_parser.add_argument(
-        "test_suite_size", type=int, help="Number of test cases to generate"
-    )
-    generate_parser.add_argument(
-        "test_case_size",
-        choices=["small", "medium", "large"],
-        help="Size category for test cases",
-    )
-
-    # Plot results command
-    plot_parser = subparsers.add_parser(
-        "plot-results",
-        help="Plot scalability results",
-        description="Generate plots from scalability experiment results",
-    )
-    plot_parser.add_argument(
-        "test_case_size",
-        choices=["small", "medium", "large"],
-        help="Test case size category",
-    )
-    plot_parser.add_argument(
-        "time_type",
-        choices=["prioritization", "total"],
-        help="Type of time measurement to plot",
-    )
-    plot_parser.add_argument(
-        "algorithms",
-        nargs="+",
-        choices=[
-            "FAST-pw",
-            "FAST-one",
-            "FAST-log",
-            "FAST-sqrt",
-            "FAST-all",
-            "STR",
-            "I-TSD",
-            "ART-D",
-            "ART-F",
-            "GT",
-            "GA",
-            "GA-S",
-        ],
-        help="Algorithms to include in the plot",
-    )
-
-    # Clean command
-    clean_parser = subparsers.add_parser(
-        "clean",
-        help="Clean preprocessed input files",
-        description="Remove preprocessed input files for a clean environment",
+    parser.add_argument(
+        "--file-naming",
+        choices=["auto", "entity-suffix", "custom"],
+        default="auto",
+        help="How to identify entity type from filenames (default: auto)",
     )
 
     return parser
 
 
-def run_prioritize(args):
-    """Run the prioritize command."""
-    # Change to the project root directory if needed
-    original_cwd = os.getcwd()
+def discover_test_files(test_dir, pattern="*.txt", file_naming="auto", entity=None):
+    """
+    Discover test files in a directory based on patterns and naming conventions.
 
+    Args:
+        test_dir (str): Directory to search for test files
+        pattern (str): File pattern to match (default: *.txt)
+        file_naming (str): How to identify entity type from filenames
+        entity (str): Required entity type for filtering
+
+    Returns:
+        dict: Mapping of entity types to file paths
+    """
+    test_dir = Path(test_dir)
+    if not test_dir.exists():
+        raise FileNotFoundError(f"Test directory not found: {test_dir}")
+
+    # Find all files matching the pattern
+    pattern_path = test_dir / pattern
+    all_files = glob.glob(str(pattern_path))
+
+    if not all_files:
+        raise ValueError(f"No files found matching pattern {pattern} in {test_dir}")
+
+    discovered_files = {}
+
+    if file_naming == "auto":
+        # Try to automatically detect entity type from filename
+        for file_path in all_files:
+            filename = Path(file_path).stem.lower()
+
+            # Check for entity keywords in filename
+            if any(keyword in filename for keyword in ["bbox", "black", "bb"]):
+                discovered_files["bbox"] = file_path
+            elif any(keyword in filename for keyword in ["function", "func", "fn"]):
+                discovered_files["function"] = file_path
+            elif any(keyword in filename for keyword in ["branch", "br"]):
+                discovered_files["branch"] = file_path
+            elif any(keyword in filename for keyword in ["line", "ln"]):
+                discovered_files["line"] = file_path
+            else:
+                # If no entity type detected, try to infer from content
+                entity_type = infer_entity_from_content(file_path)
+                if entity_type:
+                    discovered_files[entity_type] = file_path
+
+    elif file_naming == "entity-suffix":
+        # Expect files named like: dataset-entity.txt
+        for file_path in all_files:
+            filename = Path(file_path).stem
+            if "-" in filename:
+                parts = filename.split("-")
+                potential_entity = parts[-1].lower()
+                if potential_entity in ["bbox", "function", "branch", "line"]:
+                    discovered_files[potential_entity] = file_path
+
+    elif file_naming == "custom":
+        # For custom naming, use the first file found for the specified entity
+        if entity and all_files:
+            discovered_files[entity] = all_files[0]
+
+    # Filter by requested entity if specified
+    if entity and entity in discovered_files:
+        return {entity: discovered_files[entity]}
+    elif entity and entity not in discovered_files:
+        raise ValueError(f"No file found for entity type '{entity}' in {test_dir}")
+
+    return discovered_files
+
+
+def infer_entity_from_content(file_path):
+    """
+    Infer entity type from file content patterns.
+
+    Args:
+        file_path (str): Path to the test file
+
+    Returns:
+        str: Inferred entity type or None
+    """
     try:
-        # Mock sys.argv for the prioritize module
-        sys.argv = [
-            "prioritize.py",
-            args.dataset,
-            args.entity,
-            args.algorithm,
-            str(args.repetitions),
-        ]
+        with open(file_path, "r") as f:
+            first_line = f.readline().strip()
 
-        # Import and run the prioritize functionality
-        from . import prioritize as prio_module
+        # Black-box files typically contain command-line like strings
+        if (
+            first_line.startswith("-P[")
+            or "error" in first_line
+            or any(c in first_line for c in ["-F[", "-C["])
+        ):
+            return "bbox"
 
-        # Create necessary directories
-        os.makedirs("output", exist_ok=True)
-        os.makedirs("input", exist_ok=True)
+        # White-box files contain space-separated numbers
+        if first_line and all(part.isdigit() for part in first_line.split()):
+            # For white-box, we'll default to 'function' if we can't be more specific
+            return "function"
 
-        # Call the main function from prioritize module
-        prio_module.main()
-
-    except SystemExit:
-        # Handle sys.exit() calls in the original module
+    except Exception:
         pass
-    finally:
-        os.chdir(original_cwd)
+
+    return None
 
 
-def run_scalability(args):
-    """Run the scalability command."""
-    original_cwd = os.getcwd()
-
+def run_prioritization(args):
+    """Run test case prioritization."""
     try:
-        # Mock sys.argv for the scalability module
-        sys.argv = ["scalability.py", str(args.tssize), args.tcsize, args.algorithm]
-
-        # Import and run the scalability functionality
-        from . import scalability as scal_module
-
-        # Create necessary directories
-        os.makedirs("scalability/input", exist_ok=True)
-        os.makedirs("scalability/output", exist_ok=True)
-
-        # Call the main function from scalability module
-        scal_module.main()
-
-    except SystemExit:
-        # Handle sys.exit() calls in the original module
-        pass
-    finally:
-        os.chdir(original_cwd)
-
-
-def run_generate_input(args):
-    """Run the generate input command."""
-    try:
-        import subprocess
-        import sys
-
-        # Try to run the tools script
-        script_path = (
-            Path(__file__).parent.parent
-            / "tools"
-            / "generate-scalability-synthetic-input.py"
+        # Discover test files in the specified directory
+        print(f"Discovering test files in: {args.test_dir}")
+        discovered_files = discover_test_files(
+            args.test_dir,
+            pattern=args.pattern,
+            file_naming=args.file_naming,
+            entity=args.entity,
         )
 
-        if script_path.exists():
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(script_path),
-                    str(args.test_suite_size),
-                    args.test_case_size,
-                ],
-                check=True,
-            )
+        if not discovered_files:
+            print(f"No test files found for entity '{args.entity}' in {args.test_dir}")
+            return
+
+        print(f"Found files: {discovered_files}")
+
+        # Set up output directory
+        if args.output_dir:
+            output_dir = Path(args.output_dir)
         else:
-            print(f"Warning: Could not find {script_path}")
-            print("Please ensure you're running from the FAST project directory")
+            output_dir = Path.cwd() / "output"
 
-    except subprocess.CalledProcessError as e:
-        print(f"Error running generate input script: {e}")
-        sys.exit(1)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create a temporary directory structure that mimics the expected input format
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # Create input directory structure
+            temp_input_dir = temp_path / "input"
+            temp_output_dir = temp_path / "output"
+            temp_input_dir.mkdir(parents=True, exist_ok=True)
+            temp_output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Copy discovered file to expected location
+            entity_file = discovered_files[args.entity]
+            # Create a custom dataset name based on the directory
+            dir_name = Path(args.test_dir).name
+            synthetic_dataset = f"{dir_name}_v1"
+            dataset_dir = temp_input_dir / synthetic_dataset
+            dataset_dir.mkdir(parents=True, exist_ok=True)
+
+            # Copy the file with the expected naming convention
+            target_file = dataset_dir / f"{dir_name}-{args.entity}.txt"
+            shutil.copy2(entity_file, target_file)
+
+            # Create a dummy fault matrix file (required for APFD calculation)
+            # We'll create a minimal fault matrix with no faults detected
+            fault_matrix_file = dataset_dir / "fault_matrix_key_tc.pickle"
+
+            # Count the number of test cases
+            with open(target_file, "r") as f:
+                num_test_cases = sum(1 for _ in f)
+
+            # Create dummy fault matrix - no faults detected by any test case
+            dummy_fault_matrix = {str(i): [] for i in range(1, num_test_cases + 1)}
+
+            with open(fault_matrix_file, "wb") as f:
+                pickle.dump(dummy_fault_matrix, f)
+
+            # Change to temporary directory to run prioritization
+            original_cwd = os.getcwd()
+            os.chdir(temp_path)
+
+            try:
+                # Mock sys.argv for the prioritize module
+                sys.argv = [
+                    "prioritize.py",
+                    synthetic_dataset,
+                    args.entity,
+                    args.algo,
+                    str(args.repetitions),
+                ]
+
+                print(
+                    f"Running {args.algo} prioritization on {args.entity} with {args.repetitions} repetitions..."
+                )
+
+                # Import and run the prioritize functionality
+                # Call the main function from prioritize module
+                prioritize.main()
+
+                # Copy results back to the desired output directory
+                prioritized_dir = temp_output_dir / synthetic_dataset / "prioritized"
+                if prioritized_dir.exists():
+                    final_output_dir = output_dir / synthetic_dataset
+                    if final_output_dir.exists():
+                        shutil.rmtree(final_output_dir)
+                    shutil.copytree(prioritized_dir, final_output_dir)
+                    print(f"Results saved to: {final_output_dir}")
+                else:
+                    print("Warning: No prioritized results found")
+
+            except SystemExit:
+                # Handle sys.exit() calls in the original module
+                pass
+            finally:
+                os.chdir(original_cwd)
+
     except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-
-
-def run_plot_results(args):
-    """Run the plot results command."""
-    try:
-        import subprocess
-        import sys
-
-        # Try to run the tools script
-        script_path = (
-            Path(__file__).parent.parent / "tools" / "plot-scalability-results.py"
-        )
-
-        if script_path.exists():
-            cmd = [
-                sys.executable,
-                str(script_path),
-                args.test_case_size,
-                args.time_type,
-            ] + args.algorithms
-            subprocess.run(cmd, check=True)
-        else:
-            print(f"Warning: Could not find {script_path}")
-            print("Please ensure you're running from the FAST project directory")
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error running plot results script: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-
-
-def run_clean(args):
-    """Run the clean command."""
-    try:
-        import subprocess
-        import sys
-
-        # Try to run the tools script
-        script_path = (
-            Path(__file__).parent.parent / "tools" / "clean-preprocessed-input.py"
-        )
-
-        if script_path.exists():
-            subprocess.run([sys.executable, str(script_path)], check=True)
-        else:
-            print(f"Warning: Could not find {script_path}")
-            print("Please ensure you're running from the FAST project directory")
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error running clean script: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error running prioritization: {e}")
         sys.exit(1)
 
 
@@ -322,22 +297,8 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    if not args.command:
-        parser.print_help()
-        return
-
-    if args.command == "prioritize":
-        run_prioritize(args)
-    elif args.command == "scalability":
-        run_scalability(args)
-    elif args.command == "generate-input":
-        run_generate_input(args)
-    elif args.command == "plot-results":
-        run_plot_results(args)
-    elif args.command == "clean":
-        run_clean(args)
-    else:
-        parser.print_help()
+    # Simply run the prioritization with the provided arguments
+    run_prioritization(args)
 
 
 if __name__ == "__main__":

@@ -407,22 +407,13 @@ def main():
         "GA",
         "GA-S",
     }
-    prog_vs = {
-        "flex_v3",
-        "grep_v3",
-        "gzip_v1",
-        "make_v1",
-        "sed_v6",
-        "closure_v0",
-        "lang_v0",
-        "math_v0",
-        "chart_v0",
-        "time_v0",
-    }
     entities = {"bbox", "function", "branch", "line"}
 
-    if prog_v not in prog_vs:
-        print("<dataset> input incorrect.")
+    # Allow any dataset name for flexibility
+    if "_" not in prog_v:
+        print(
+            "<dataset> input should be in format 'name_version' (e.g., 'flex_v3', 'custom_v1')."
+        )
         print(usage)
         exit()
     elif entity not in entities:
@@ -438,7 +429,9 @@ def main():
         print(usage)
         exit()
 
-    prog, v = prog_v.split("_")
+    # Split on the last underscore to separate program name and version
+    parts = prog_v.rsplit("_", 1)
+    prog, v = parts[0], parts[1]
 
     directory = "output/{}_{}/".format(prog, v)
     if not os.path.exists(directory):
