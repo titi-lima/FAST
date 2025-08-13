@@ -22,3 +22,4 @@ func TestGreetAnother(t *testing.T) {
 		t.Fatalf("expected 'Hello, FAST!', got %q", got)
 	}
 }
+

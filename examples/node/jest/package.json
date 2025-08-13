@@ -1,0 +1,14 @@
+{
+  "name": "fast-tcp-jest-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example: FAST TCP headless prioritization integrated with Jest (bbox-only)",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
+

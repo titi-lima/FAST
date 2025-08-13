@@ -18,13 +18,10 @@ def find_test_body(file_src: str, test_name: str) -> str | None:
     for m in TEST_DEF_RE.finditer(file_src):
         if m.group("name") != test_name:
             continue
-        # Find the function body opening brace after the match end
         idx = m.end()
-        # Search for the first '{' character after potential arrow/function syntax
         func_start = file_src.find("{", idx)
         if func_start == -1:
             continue
-        # Extract balanced braces body
         depth = 0
         body_chars: list[str] = []
         for ch in file_src[func_start:]:
@@ -49,7 +46,7 @@ def tokenize(text: str) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser(
         description=(
-            "Generate bbox tokens per Jest test using a tests-map TSV (file\tname)"
+            "Generate bbox tokens per Vitest test using a tests-map TSV (file\tname)"
         )
     )
     ap.add_argument(
@@ -59,7 +56,7 @@ def main() -> None:
         "--tests-map", required=True, help="Path to test-names.tsv from tests-map.py"
     )
     ap.add_argument(
-        "--out", required=True, help="Output bbox path, e.g., .fast/in/jest-bbox.txt"
+        "--out", required=True, help="Output bbox path, e.g., .fast/in/vitest-bbox.txt"
     )
     args = ap.parse_args()
 
@@ -76,7 +73,6 @@ def main() -> None:
         try:
             file_str, test_name = line.split("\t", 1)
         except ValueError:
-            # fallback: treat entire line as test name, no file
             file_str, test_name = "", line.strip()
         file_path = (
             (tests_dir / Path(file_str)).resolve()
@@ -86,7 +82,6 @@ def main() -> None:
         src = read_text(file_path)
         body = find_test_body(src, test_name)
         if body is None:
-            # Fallback to whole file content
             body = src
         cases.append(tokenize(body))
 
