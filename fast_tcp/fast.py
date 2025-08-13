@@ -213,7 +213,8 @@ def fast_pw(input_file, r, b, bbox=False, k=5, memory=False, B=0):
     ptime = time.perf_counter() - ptime_start
 
     max_ts_size = sum((1 for line in open(input_file)))
-    return mh_time, ptime, prioritized_tcs[1:max_ts_size]
+    # (slice is inclusive of last TC)
+    return mh_time, ptime, prioritized_tcs[1 : max_ts_size + 1]
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -335,4 +336,5 @@ def fast_(input_file, selsize, r, b, bbox=False, k=5, memory=False, B=0):
     ptime = time.perf_counter() - ptime_start
 
     max_ts_size = sum((1 for line in open(input_file)))
-    return mh_time, ptime, prioritized_tcs[1:max_ts_size]
+    # Include all test cases in returned prioritization (slice is inclusive of last TC)
+    return mh_time, ptime, prioritized_tcs[1 : max_ts_size + 1]
