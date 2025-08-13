@@ -18,7 +18,6 @@ along with this source.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
 from collections import OrderedDict
-from struct import pack, unpack
 import os
 import random
 import sys

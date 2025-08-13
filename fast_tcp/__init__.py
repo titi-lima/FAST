@@ -14,7 +14,6 @@ __description__ = (
 
 # Import main functionality
 from .fast import fast_pw, fast_
-from .competitors import str_, i_tsd, gt, ga, ga_s, artd, artf
 from .metric import apfd
 from .lsh import kShingles, tcMinhashing, LSHBucket, LSHCandidates, jDistanceEstimate
 
@@ -23,11 +22,6 @@ __all__ = [
     "fast_",
     "str_",
     "i_tsd",
-    "gt",
-    "ga",
-    "ga_s",
-    "artd",
-    "artf",
     "apfd",
     "kShingles",
     "tcMinhashing",

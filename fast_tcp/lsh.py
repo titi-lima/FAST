@@ -1,4 +1,4 @@
-'''
+"""
 This file is part of an ICSE'18 submission that is currently under review.
 For more information visit: https://github.com/icse18-FAST/FAST.
 
@@ -14,17 +14,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this source.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from collections import defaultdict
 from collections import OrderedDict
-import itertools
 
 import xxhash
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # SHINGLING
+
 
 def kShingles(TS, k):
     """INPUT
@@ -38,7 +38,7 @@ def kShingles(TS, k):
         tc = TS[tcID]
         shingle = set()
         for i in range(len(tc) - k + 1):
-            shingle.add(hash(tc[i:i + k]))
+            shingle.add(hash(tc[i : i + k]))
         shingles[tcID] = shingle
 
     return shingles
@@ -46,6 +46,7 @@ def kShingles(TS, k):
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # MINWISEHASHING
+
 
 def hashFamily(i):
     def hashMember(x):
@@ -78,6 +79,7 @@ def tcMinhashing(test_case, hash_functions):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # LOCALITY SENSITIVE HASHING (LSH)
 
+
 def LSHBucket(minhashes, b, r, n):
     """INPUT
     (dict)minhashes: key=minhashes of test cases
@@ -87,7 +89,7 @@ def LSHBucket(minhashes, b, r, n):
 
     OUTPUT
     (dict(dict))LSHBuckets: key=band, val=dict(key=col_sig, val=set(tc_IDs))"""
-    assert(b * r == n)
+    assert b * r == n
 
     # key=band, val=dict(key=col_sig, val=set(tc_IDs))
     bucket = defaultdict(dict)
@@ -96,7 +98,7 @@ def LSHBucket(minhashes, b, r, n):
         bucket[i] = defaultdict(set)  # to catch collisions in each band
         for tc_signature in minhashes:
             tc_ID, signatures = tc_signature
-            column = signatures[i:i + r]
+            column = signatures[i : i + r]
             column_signature = hash(str(column))
 
             bucket[i][column_signature].add(tc_ID)
@@ -116,14 +118,14 @@ def LSHCandidates(bucket, signature, b, r, n):
 
     OUTPUT
     (set)candidates: set of possibly similar test cases"""
-    assert(b * r == n)
+    assert b * r == n
 
     candidates = set()
 
     i = 0
     while i < n:  # for each band
         tc_ID0, minhash = signature
-        column = minhash[i:i + r]
+        column = minhash[i : i + r]
         column_signature = hash(str(column))
 
         for tc_ID in bucket[i][column_signature]:
@@ -137,15 +139,19 @@ def LSHCandidates(bucket, signature, b, r, n):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # JACCARD SIMILARITY/DISTANCE EXACT AND ESTIMATES
 
+
 def jSimilarity(a, b):
     return float(len(a & b)) / len(a | b)
+
 
 def jDistance(a, b):
     return 1.0 - jSimilarity(a, b)
 
+
 def jSimilarityEstimate(s1, s2):
-    assert(len(s1) == len(s2))
+    assert len(s1) == len(s2)
     return sum([1 for i in range(len(s1)) if s1[i] == s2[i]]) / float(len(s1))
+
 
 def jDistanceEstimate(s1, s2):
     return 1.0 - jSimilarityEstimate(s1, s2)

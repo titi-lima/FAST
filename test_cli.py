@@ -514,8 +514,6 @@ class CLITestSuite:
             self.test_invalid_entity,
             self.test_nonexistent_directory,
             lambda: self.test_basic_prioritization("FAST-pw", "bbox"),
-            lambda: self.test_basic_prioritization("STR", "function"),
-            lambda: self.test_basic_prioritization("I-TSD", "branch"),
             self.test_file_discovery_auto,
             self.test_custom_pattern,
             # Commented out for faster testing - uncomment to test all algorithms
