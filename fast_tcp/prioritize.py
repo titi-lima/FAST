@@ -22,165 +22,62 @@ import pickle
 import sys
 
 from . import fast
-from . import metric
 
 
 usage = """USAGE: python py/prioritize.py <dataset> <entity> <algorithm> <repetitions>
 OPTIONS:
   <dataset>: test suite to prioritize.
     options: flex_v3, grep_v3, gzip_v1, make_v1, sed_v6, closure_v0, lang_v0, math_v0, chart_v0, time_v0
-  <entity>: BB or WB (function, branch, line) prioritization.
-    options: bbox, function, branch, line
+  <entity>: BB prioritization.
+    options: bbox
   <algorithm>: algorithm used for prioritization.
-    options: FAST-pw, FAST-one, FAST-log, FAST-sqrt, FAST-all, STR, I-TSD, ART-D, ART-F, GT, GA, GA-S
+    options: FAST-pw, FAST-one, FAST-log, FAST-sqrt, FAST-all
   <repetitions>: number of prioritization to compute.
     options: positive integer value, e.g. 50
-NOTE:
-  STR, I-TSD are BB prioritization only.
-  ART-D, ART-F, GT, GA, GA-S are WB prioritization only."""
+"""
 
 
 def bboxPrioritization(name, prog, v, ctype, k, n, r, b, repeats, selsize):
     javaFlag = True if v == "v0" else False
 
     fin = "input/{}_{}/{}-{}.txt".format(prog, v, prog, ctype)
-    if javaFlag:
-        fault_matrix = "input/{}_{}/fault_matrix.pickle".format(prog, v)
-    else:
-        fault_matrix = "input/{}_{}/fault_matrix_key_tc.pickle".format(prog, v)
     outpath = "output/{}_{}/".format(prog, v)
     ppath = outpath + "prioritized/"
 
     if name == "FAST-" + selsize.__name__[:-1]:
         if ("{}-{}.tsv".format(name, ctype)) not in set(os.listdir(outpath)):
-            ptimes, stimes, apfds = [], [], []
+            ptimes, stimes = [], []
             for run in range(repeats):
                 print(" Run", run)
-                if javaFlag:
-                    stime, ptime, prioritization = fast.fast_(
-                        fin, selsize, r=r, b=b, bbox=True, k=k, memory=False
-                    )
-                else:
-                    stime, ptime, prioritization = fast.fast_(
-                        fin, selsize, r=r, b=b, bbox=True, k=k, memory=True
-                    )
+                stime, ptime, prioritization = fast.fast_(
+                    fin, selsize, r=r, b=b, bbox=True, k=k, memory=not javaFlag
+                )
                 writePrioritization(ppath, name, ctype, run, prioritization)
-                apfd = metric.apfd(prioritization, fault_matrix, javaFlag)
-                apfds.append(apfd)
                 stimes.append(stime)
                 ptimes.append(ptime)
                 print("  Progress: 100%  ")
                 print("  Running time:", stime + ptime)
-                if javaFlag:
-                    print("  APFD:", sum(apfds[run]) / len(apfds[run]))
-                else:
-                    print("  APFD:", apfd)
-            rep = (name, stimes, ptimes, apfds)
-            writeOutput(outpath, ctype, rep, javaFlag)
+            rep = (name, stimes, ptimes)
+            writeOutput(outpath, ctype, rep)
             print("")
         else:
             print(name, "already run.")
 
     elif name == "FAST-pw":
         if ("{}-{}.tsv".format(name, ctype)) not in set(os.listdir(outpath)):
-            ptimes, stimes, apfds = [], [], []
+            ptimes, stimes = [], []
             for run in range(repeats):
                 print(" Run", run)
-                if javaFlag:
-                    stime, ptime, prioritization = fast.fast_pw(
-                        fin, r, b, bbox=True, k=k, memory=False
-                    )
-                else:
-                    stime, ptime, prioritization = fast.fast_pw(
-                        fin, r, b, bbox=True, k=k, memory=True
-                    )
+                stime, ptime, prioritization = fast.fast_pw(
+                    fin, r, b, bbox=True, k=k, memory=not javaFlag
+                )
                 writePrioritization(ppath, name, ctype, run, prioritization)
-                apfd = metric.apfd(prioritization, fault_matrix, javaFlag)
-                apfds.append(apfd)
                 stimes.append(stime)
                 ptimes.append(ptime)
                 print("  Progress: 100%  ")
                 print("  Running time:", stime + ptime)
-                if javaFlag:
-                    print("  APFD:", sum(apfds[run]) / len(apfds[run]))
-                else:
-                    print("  APFD:", apfd)
-            rep = (name, stimes, ptimes, apfds)
-            writeOutput(outpath, ctype, rep, javaFlag)
-            print("")
-        else:
-            print(name, "already run.")
-
-    else:
-        print("Wrong input.")
-        print(usage)
-        exit()
-
-
-def wboxPrioritization(name, prog, v, ctype, n, r, b, repeats, selsize):
-    javaFlag = True if v == "v0" else False
-
-    fin = "input/{}_{}/{}-{}.txt".format(prog, v, prog, ctype)
-    if javaFlag:
-        fault_matrix = "input/{}_{}/fault_matrix.pickle".format(prog, v)
-    else:
-        fault_matrix = "input/{}_{}/fault_matrix_key_tc.pickle".format(prog, v)
-
-    outpath = "output/{}_{}/".format(prog, v)
-    ppath = outpath + "prioritized/"
-
-    if name == "FAST-" + selsize.__name__[:-1]:
-        if ("{}-{}.tsv".format(name, ctype)) not in set(os.listdir(outpath)):
-            ptimes, stimes, apfds = [], [], []
-            for run in range(repeats):
-                print(" Run", run)
-                if javaFlag:
-                    stime, ptime, prioritization = fast.fast_(
-                        fin, selsize, r=r, b=b, memory=False
-                    )
-                else:
-                    stime, ptime, prioritization = fast.fast_(
-                        fin, selsize, r=r, b=b, memory=True
-                    )
-                writePrioritization(ppath, name, ctype, run, prioritization)
-                apfd = metric.apfd(prioritization, fault_matrix, javaFlag)
-                apfds.append(apfd)
-                stimes.append(stime)
-                ptimes.append(ptime)
-                print("  Progress: 100%  ")
-                print("  Running time:", stime + ptime)
-                if javaFlag:
-                    print("  APFD:", sum(apfds[run]) / len(apfds[run]))
-                else:
-                    print("  APFD:", apfd)
-            rep = (name, stimes, ptimes, apfds)
-            writeOutput(outpath, ctype, rep, javaFlag)
-            print("")
-        else:
-            print(name, "already run.")
-
-    elif name == "FAST-pw":
-        if ("{}-{}.tsv".format(name, ctype)) not in set(os.listdir(outpath)):
-            ptimes, stimes, apfds = [], [], []
-            for run in range(repeats):
-                print(" Run", run)
-                if javaFlag:
-                    stime, ptime, prioritization = fast.fast_pw(fin, r, b)
-                else:
-                    stime, ptime, prioritization = fast.fast_pw(fin, r, b, memory=True)
-                writePrioritization(ppath, name, ctype, run, prioritization)
-                apfd = metric.apfd(prioritization, fault_matrix, javaFlag)
-                apfds.append(apfd)
-                stimes.append(stime)
-                ptimes.append(ptime)
-                print("  Progress: 100%  ")
-                print("  Running time:", stime + ptime)
-                if javaFlag:
-                    print("  APFD:", sum(apfds[run]) / len(apfds[run]))
-                else:
-                    print("  APFD:", apfd)
-            rep = (name, stimes, ptimes, apfds)
-            writeOutput(outpath, ctype, rep, javaFlag)
+            rep = (name, stimes, ptimes)
+            writeOutput(outpath, ctype, rep)
             print("")
         else:
             print(name, "already run.")
@@ -199,24 +96,14 @@ def writePrioritization(path, name, ctype, run, prioritization):
     pickle.dump(prioritization, open(fout, "wb"))
 
 
-def writeOutput(outpath, ctype, res, javaFlag):
-    if javaFlag:
-        name, stimes, ptimes, apfds = res
-        fileout = "{}/{}-{}.tsv".format(outpath, name, ctype)
-        with open(fileout, "w") as fout:
-            fout.write("SignatureTime\tPrioritizationTime\tAPFD\n")
-            for st, pt, apfdlist in zip(stimes, ptimes, apfds):
-                for apfd in apfdlist:
-                    tsvLine = "{}\t{}\t{}\n".format(st, pt, apfd)
-                    fout.write(tsvLine)
-    else:
-        name, stimes, ptimes, apfds = res
-        fileout = "{}/{}-{}.tsv".format(outpath, name, ctype)
-        with open(fileout, "w") as fout:
-            fout.write("SignatureTime\tPrioritizationTime\tAPFD\n")
-            for st, pt, apfd in zip(stimes, ptimes, apfds):
-                tsvLine = "{}\t{}\t{}\n".format(st, pt, apfd)
-                fout.write(tsvLine)
+def writeOutput(outpath, ctype, res):
+    name, stimes, ptimes = res
+    fileout = "{}/{}-{}.tsv".format(outpath, name, ctype)
+    with open(fileout, "w") as fout:
+        fout.write("SignatureTime\tPrioritizationTime\n")
+        for st, pt in zip(stimes, ptimes):
+            tsvLine = "{}\t{}\n".format(st, pt)
+            fout.write(tsvLine)
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -238,9 +125,8 @@ def main():
         "FAST-sqrt",
         "FAST-all",
     }
-    entities = {"bbox", "function", "branch", "line"}
+    entities = {"bbox"}
 
-    # Allow any dataset name for flexibility
     if "_" not in prog_v:
         print(
             "<dataset> input should be in format 'name_version' (e.g., 'flex_v3', 'custom_v1')."
@@ -306,10 +192,7 @@ def main():
 
         selsize = pw
 
-    if entity == "bbox":
-        bboxPrioritization(algname, prog, v, entity, k, n, r, b, repeats, selsize)
-    else:
-        wboxPrioritization(algname, prog, v, entity, n, r, b, repeats, selsize)
+    bboxPrioritization(algname, prog, v, entity, k, n, r, b, repeats, selsize)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,6 @@ import os
 import glob
 import shutil
 import tempfile
-import pickle
 from pathlib import Path
 
 from . import prioritize
@@ -42,21 +41,14 @@ Examples:
             "FAST-log",
             "FAST-sqrt",
             "FAST-all",
-            "STR",
-            "I-TSD",
-            "ART-D",
-            "ART-F",
-            "GT",
-            "GA",
-            "GA-S",
         ],
         help="Algorithm used for prioritization",
     )
     parser.add_argument(
         "--entity",
         required=True,
-        choices=["bbox", "function", "branch", "line"],
-        help="BB or WB (function, branch, line) prioritization",
+        choices=["bbox"],
+        help="BB prioritization",
     )
     parser.add_argument(
         "--repetitions",
@@ -233,20 +225,6 @@ def run_prioritization(args):
             # Copy the file with the expected naming convention
             target_file = dataset_dir / f"{dir_name}-{args.entity}.txt"
             shutil.copy2(entity_file, target_file)
-
-            # Create a dummy fault matrix file (required for APFD calculation)
-            # We'll create a minimal fault matrix with no faults detected
-            fault_matrix_file = dataset_dir / "fault_matrix_key_tc.pickle"
-
-            # Count the number of test cases
-            with open(target_file, "r") as f:
-                num_test_cases = sum(1 for _ in f)
-
-            # Create dummy fault matrix - no faults detected by any test case
-            dummy_fault_matrix = {str(i): [] for i in range(1, num_test_cases + 1)}
-
-            with open(fault_matrix_file, "wb") as f:
-                pickle.dump(dummy_fault_matrix, f)
 
             # Change to temporary directory to run prioritization
             original_cwd = os.getcwd()

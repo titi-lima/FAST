@@ -14,15 +14,11 @@ __description__ = (
 
 # Import main functionality
 from .fast import fast_pw, fast_
-from .metric import apfd
 from .lsh import kShingles, tcMinhashing, LSHBucket, LSHCandidates, jDistanceEstimate
 
 __all__ = [
     "fast_pw",
     "fast_",
-    "str_",
-    "i_tsd",
-    "apfd",
     "kShingles",
     "tcMinhashing",
     "LSHBucket",

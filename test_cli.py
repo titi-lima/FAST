@@ -11,7 +11,6 @@ import sys
 import tempfile
 import shutil
 import subprocess
-import json
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import pickle
@@ -24,6 +23,8 @@ class CLITestSuite:
         self.test_results = []
         self.temp_dirs = []
         self.original_cwd = os.getcwd()
+        # Repository root (directory containing this test file)
+        self.repo_root = Path(__file__).resolve().parent
 
     def cleanup(self):
         """Clean up temporary directories."""
@@ -110,12 +111,22 @@ class CLITestSuite:
     ) -> Tuple[int, str, str]:
         """Run a CLI command and return exit code, stdout, stderr."""
         try:
+            # Ensure subprocesses prefer local sources over installed packages
+            env = os.environ.copy()
+            repo_root_str = str(self.repo_root)
+            existing_pythonpath = env.get("PYTHONPATH", "")
+            env["PYTHONPATH"] = (
+                repo_root_str
+                if not existing_pythonpath
+                else repo_root_str + os.pathsep + existing_pythonpath
+            )
             result = subprocess.run(
                 cmd,
-                cwd=cwd or self.original_cwd,
+                cwd=cwd or str(self.repo_root),
                 capture_output=True,
                 text=True,
                 timeout=60,  # 60 second timeout
+                env=env,
             )
             return result.returncode, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
@@ -366,7 +377,7 @@ class CLITestSuite:
                     "--test-dir",
                     str(temp_path),
                     "--algo",
-                    "STR",
+                    "FAST-pw",
                     "--entity",
                     "bbox",
                     "--output-dir",
@@ -412,9 +423,9 @@ class CLITestSuite:
                     "--test-dir",
                     str(temp_path),
                     "--algo",
-                    "I-TSD",
+                    "FAST-pw",
                     "--entity",
-                    "function",
+                    "bbox",
                     "--output-dir",
                     str(output_path),
                     "--pattern",
@@ -445,13 +456,6 @@ class CLITestSuite:
             "FAST-log",
             "FAST-sqrt",
             "FAST-all",
-            "STR",
-            "I-TSD",
-            "ART-D",
-            "ART-F",
-            "GT",
-            "GA",
-            "GA-S",
         ]
 
         results = []
@@ -464,7 +468,7 @@ class CLITestSuite:
                 output_path = temp_path / "output"
 
                 # Create small test dataset
-                self.create_test_data(temp_path, "function", num_test_cases=5)
+                self.create_test_data(temp_path, "bbox", num_test_cases=5)
 
                 returncode, stdout, stderr = self.run_cli_command(
                     [
@@ -476,7 +480,7 @@ class CLITestSuite:
                         "--algo",
                         algo,
                         "--entity",
-                        "function",
+                        "bbox",
                         "--output-dir",
                         str(output_path),
                         "--repetitions",
