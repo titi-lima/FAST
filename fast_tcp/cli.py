@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import re
 from pathlib import Path
+from typing import List
 
 from . import prioritize
 
@@ -181,7 +182,7 @@ def _init_ant(project_dir: Path, algo: str, repetitions: int) -> int:
     return 0
 
 
-def _pytest_ini_update_addopts(existing: str, new_tokens: list[str]) -> str:
+def _pytest_ini_update_addopts(existing: str, new_tokens: List[str]) -> str:
     import re as _re
 
     # Normalize accidental one-liner: "[pytest] addopts = ..." -> two lines
@@ -302,7 +303,7 @@ def _init_pytest(
     return 0
 
 
-def run_init(argv: list[str]) -> int:
+def run_init(argv: List[str]) -> int:
     parser = create_init_parser()
     args = parser.parse_args(argv)
     tool = args.tool
