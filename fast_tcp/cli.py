@@ -171,7 +171,8 @@ def _init_ant(project_dir: Path, algo: str, repetitions: int) -> int:
     updated = replace_or_insert_target(updated, new_target)
 
     if updated != original:
-        backup = build_xml.with_suffix(".fast-tcp.bak.xml")
+        backup = project_dir / ".fast" / "build.xml.bak"
+        backup.parent.mkdir(parents=True, exist_ok=True)
         backup.write_text(original, encoding="utf-8")
         build_xml.write_text(updated, encoding="utf-8")
         print(f"Updated {build_xml} (backup at {backup})")

@@ -16,7 +16,6 @@
         <echo>  clean          - Remove build outputs</echo>
         <echo>  compile        - Compile main and test classes (Java 21)</echo>
         <echo>  test           - Run tests with JUnit Console</echo>
-        <echo>  fast-tcp       - Prioritize and run tests with FAST TCP</echo>
     </target>
 
     <target name="clean">
@@ -59,7 +58,8 @@
         <and>
             <available file="${junit.console}"/>
         </and>
-    </condition><!-- FAST TCP initialization target -->
+    </condition>
+    <!-- FAST TCP initialization target -->
     <target name="fast-tcp">
         <fast-tcp-prioritize-and-run projectDir="${basedir}" algo="FAST-pw" repetitions="3"/>
     </target>
