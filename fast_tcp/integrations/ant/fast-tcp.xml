@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="fast-tcp-macros">
+    <!--
+      FAST TCP Ant Macros
+      Usage:
+        <import file="${fast.tcp.macros}"/>
+        <macrodef name="fast-tcp-prioritize-and-run">
+          <attribute name="projectDir"/>
+          <attribute name="algo" default="FAST-pw"/>
+          <attribute name="repetitions" default="3"/>
+        </macrodef>
+    -->
+
+    <macrodef name="fast-tcp-prioritize-and-run">
+        <attribute name="projectDir"/>
+        <attribute name="algo" default="FAST-pw"/>
+        <attribute name="repetitions" default="3"/>
+        <sequential>
+            <echo>FAST TCP: prioritizing tests with @{algo} (reps @{repetitions})</echo>
+            <exec executable="python3" failonerror="true">
+                <arg value="-m"/>
+                <arg value="fast_tcp.integrations.ant.cli"/>
+                <arg value="macro"/>
+                <arg value="--project-dir"/>
+                <arg value="@{projectDir}"/>
+                <arg value="--algo"/>
+                <arg value="@{algo}"/>
+                <arg value="--repetitions"/>
+                <arg value="@{repetitions}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+</project>
+
+

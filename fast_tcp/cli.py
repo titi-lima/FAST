@@ -8,6 +8,7 @@ import os
 import glob
 import shutil
 import tempfile
+import re
 from pathlib import Path
 
 from . import prioritize
@@ -73,6 +74,92 @@ Examples:
     )
 
     return parser
+
+
+def create_init_parser():
+    parser = argparse.ArgumentParser(
+        prog="fast-tcp init",
+        description="Initialize FAST TCP integration",
+    )
+    sub = parser.add_subparsers(dest="tool", required=True)
+
+    p_ant = sub.add_parser("ant", help="Initialize Ant project integration")
+    p_ant.add_argument("--project-dir", default=".", help="Path to Ant project root")
+    p_ant.add_argument("--algo", default="FAST-pw")
+    p_ant.add_argument("--repetitions", type=int, default=3)
+
+    return parser
+
+
+def _safe_write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _init_ant(project_dir: Path, algo: str, repetitions: int) -> int:
+    build_xml = project_dir / "build.xml"
+    if not build_xml.exists():
+        print(f"No build.xml found under {project_dir}")
+        return 2
+
+    original = build_xml.read_text(encoding="utf-8")
+    updated = original
+
+    def replace_or_insert_target(text: str, target_xml: str) -> str:
+        # Match any number of our comment lines preceding the fast-tcp target, plus the target itself
+        pattern = r"(?:\s*<!--\s*FAST TCP initialization target\s*-->\s*)*<target\s+name=\"fast-tcp\"[\s\S]*?</target>"
+        if re.search(pattern, text):
+            return re.sub(pattern, target_xml.strip(), text, count=1)
+        return text.replace("\n</project>", f"\n{target_xml}\n</project>")
+
+    # Copy packaged macros to .fast/fast-tcp.xml
+    macros_src = Path(__file__).parent / "integrations" / "ant" / "fast-tcp.xml"
+    macros_dst = project_dir / ".fast" / "fast-tcp.xml"
+    macros_dst.parent.mkdir(parents=True, exist_ok=True)
+    macros_dst.write_text(macros_src.read_text(encoding="utf-8"), encoding="utf-8")
+
+    # Ensure import present near top
+    if "fast-tcp.xml" not in updated:
+        lines = updated.splitlines()
+        for i, line in enumerate(lines):
+            if line.strip().startswith("<project"):
+                insert_idx = i + 1
+                break
+        else:
+            insert_idx = 1
+        lines.insert(insert_idx, '    <import file=".fast/fast-tcp.xml"/>')
+        updated = "\n".join(lines) + ("\n" if updated.endswith("\n") else "")
+
+    # Ensure/replace fast-tcp target
+    new_target = (
+        "    <!-- FAST TCP initialization target -->\n"
+        '    <target name="fast-tcp">\n'
+        f'        <fast-tcp-prioritize-and-run projectDir="${{basedir}}" algo="{algo}" repetitions="{repetitions}"/>\n'
+        "    </target>"
+    )
+    updated = replace_or_insert_target(updated, new_target)
+
+    if updated != original:
+        backup = build_xml.with_suffix(".fast-tcp.bak.xml")
+        backup.write_text(original, encoding="utf-8")
+        build_xml.write_text(updated, encoding="utf-8")
+        print(f"Updated {build_xml} (backup at {backup})")
+    else:
+        print("No changes needed; FAST TCP already initialized.")
+
+    print("Done. Run: ant fast-tcp")
+    return 0
+
+
+def run_init(argv: list[str]) -> int:
+    parser = create_init_parser()
+    args = parser.parse_args(argv)
+    tool = args.tool
+    if tool == "ant":
+        project_dir = Path(args.project_dir).resolve()
+        return _init_ant(project_dir, algo=args.algo, repetitions=args.repetitions)
+    print(f"Unknown init tool: {tool}")
+    return 2
 
 
 def discover_test_files(test_dir, pattern="*.txt", file_naming="auto", entity=None):
@@ -272,11 +359,14 @@ def run_prioritization(args):
 
 def main():
     """Main CLI entry point."""
+    # Support a top-level 'init' subcommand without breaking existing flags-only usage
+    if len(sys.argv) > 1 and sys.argv[1] == "init":
+        return run_init(sys.argv[2:])
+
     parser = create_parser()
     args = parser.parse_args()
-
-    # Simply run the prioritization with the provided arguments
     run_prioritization(args)
+    return 0
 
 
 if __name__ == "__main__":

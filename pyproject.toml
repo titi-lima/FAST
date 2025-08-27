@@ -55,4 +55,4 @@ include = ["fast_tcp*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-fast_tcp = ["*.txt", "*.md"] 
+fast_tcp = ["*.txt", "*.md", "integrations/ant/*.xml"]
