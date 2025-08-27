@@ -88,6 +88,36 @@ def create_init_parser():
     p_ant.add_argument("--algo", default="FAST-pw")
     p_ant.add_argument("--repetitions", type=int, default=3)
 
+    p_pytest = sub.add_parser("pytest", help="Initialize Pytest project integration")
+    p_pytest.add_argument(
+        "--project-dir", default=".", help="Path to Pytest project root"
+    )
+    p_pytest.add_argument(
+        "--enable",
+        dest="enable",
+        action="store_true",
+        help="Enable FAST TCP by default via addopts",
+    )
+    p_pytest.add_argument(
+        "--no-enable", dest="enable", action="store_false", help="Do not modify addopts"
+    )
+    p_pytest.set_defaults(enable=True)
+    p_pytest.add_argument(
+        "--algo", default="FAST-pw", help="FAST variant for default config"
+    )
+    p_pytest.add_argument(
+        "--r", type=int, default=1, help="FAST rows (r) for default config"
+    )
+    p_pytest.add_argument(
+        "--b", type=int, default=10, help="FAST bands (b) for default config"
+    )
+    p_pytest.add_argument(
+        "--k", type=int, default=5, help="k-shingle size for default config"
+    )
+    p_pytest.add_argument(
+        "--budget", type=int, default=0, help="Budget B for default config (0=all)"
+    )
+
     return parser
 
 
@@ -151,6 +181,127 @@ def _init_ant(project_dir: Path, algo: str, repetitions: int) -> int:
     return 0
 
 
+def _pytest_ini_update_addopts(existing: str, new_tokens: list[str]) -> str:
+    import re as _re
+
+    # Normalize accidental one-liner: "[pytest] addopts = ..." -> two lines
+    existing = _re.sub(
+        r"^\[pytest\][ \t]*addopts\s*=\s*",
+        "[pytest]\naddopts = ",
+        existing,
+        flags=_re.M,
+    )
+
+    lines = existing.splitlines(keepends=True)
+    if not lines:
+        lines = ["[pytest]\n"]
+
+    # Find the [pytest] header
+    header_idx = None
+    for i, line in enumerate(lines):
+        if line.strip() == "[pytest]":
+            header_idx = i
+            break
+
+    addopts_line = "addopts = " + " ".join(new_tokens) + "\n"
+
+    if header_idx is None:
+        # Append a new section at the end
+        if lines and not lines[-1].endswith("\n"):
+            lines[-1] = lines[-1] + "\n"
+        lines.extend(["[pytest]\n", addopts_line])
+        result = "".join(lines)
+        if not result.endswith("\n"):
+            result += "\n"
+        return result
+
+    # Ensure header ends with a newline
+    if not lines[header_idx].endswith("\n"):
+        lines[header_idx] = lines[header_idx].rstrip("\n") + "\n"
+
+    # Determine the end of the [pytest] section
+    j = header_idx + 1
+    while j < len(lines) and not lines[j].lstrip().startswith("["):
+        j += 1
+
+    # Locate addopts within the section
+    addopts_idx = None
+    for k in range(header_idx + 1, j):
+        if _re.match(r"^[ \t]*addopts\s*=", lines[k]):  # do not consume newlines
+            addopts_idx = k
+            break
+
+    if addopts_idx is None:
+        lines.insert(header_idx + 1, addopts_line)
+    else:
+        current = _re.sub(r"^\s*addopts\s*=\s*", "", lines[addopts_idx]).strip()
+        tokens = current.split()
+        for t in new_tokens:
+            if t not in tokens:
+                tokens.append(t)
+        lines[addopts_idx] = "addopts = " + " ".join(tokens) + "\n"
+
+    result = "".join(lines)
+    if not result.endswith("\n"):
+        result += "\n"
+    return result
+
+
+def _init_pytest(
+    project_dir: Path, *, enable: bool, algo: str, r: int, b: int, k: int, budget: int
+) -> int:
+    cfg_path = project_dir / "pytest.ini"
+    if not cfg_path.exists():
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        cfg_text = "[pytest]\n"
+        if enable:
+            addopts = [
+                "--fast-tcp",
+                "--fast-tcp-algo",
+                algo,
+                "--fast-tcp-r",
+                str(r),
+                "--fast-tcp-b",
+                str(b),
+                "--fast-tcp-k",
+                str(k),
+                "--fast-tcp-budget",
+                str(budget),
+            ]
+            cfg_text += "addopts = " + " ".join(addopts) + "\n"
+        _safe_write(cfg_path, cfg_text)
+        print(f"Created {cfg_path}")
+    else:
+        text = cfg_path.read_text(encoding="utf-8")
+        if enable:
+            tokens = [
+                "--fast-tcp",
+                "--fast-tcp-algo",
+                algo,
+                "--fast-tcp-r",
+                str(r),
+                "--fast-tcp-b",
+                str(b),
+                "--fast-tcp-k",
+                str(k),
+                "--fast-tcp-budget",
+                str(budget),
+            ]
+            updated = _pytest_ini_update_addopts(text, tokens)
+            if updated != text:
+                cfg_path.write_text(updated, encoding="utf-8")
+                print(f"Updated {cfg_path}")
+            else:
+                print("No changes needed; Pytest already configured for FAST TCP.")
+        else:
+            print(
+                "Pytest plugin is auto-discovered; run pytest with --fast-tcp to enable."
+            )
+
+    print("Done. Run: pytest")
+    return 0
+
+
 def run_init(argv: list[str]) -> int:
     parser = create_init_parser()
     args = parser.parse_args(argv)
@@ -158,6 +309,17 @@ def run_init(argv: list[str]) -> int:
     if tool == "ant":
         project_dir = Path(args.project_dir).resolve()
         return _init_ant(project_dir, algo=args.algo, repetitions=args.repetitions)
+    if tool == "pytest":
+        project_dir = Path(args.project_dir).resolve()
+        return _init_pytest(
+            project_dir,
+            enable=args.enable,
+            algo=args.algo,
+            r=args.r,
+            b=args.b,
+            k=args.k,
+            budget=args.budget,
+        )
     print(f"Unknown init tool: {tool}")
     return 2
 

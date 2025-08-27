@@ -56,3 +56,6 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 fast_tcp = ["*.txt", "*.md", "integrations/ant/*.xml"]
+
+[project.entry-points.pytest11]
+fast_tcp = "fast_tcp.integrations.pytest.plugin"
