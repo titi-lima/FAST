@@ -131,6 +131,15 @@ def create_init_parser():
         help="Do not modify package.json scripts; only copy .fast helpers",
     )
 
+    p_gotest = sub.add_parser(
+        "gotest", help="Initialize Go (testing) project integration"
+    )
+    p_gotest.add_argument(
+        "--project-dir", default=".", help="Path to Go module/project root"
+    )
+    p_gotest.add_argument("--algo", default="FAST-pw", help="FAST variant to use")
+    p_gotest.add_argument("--repetitions", type=int, default=3)
+
     return parser
 
 
@@ -371,6 +380,52 @@ def _init_vitest(
     return 0
 
 
+def _init_gotest(project_dir: Path, *, algo: str, repetitions: int) -> int:
+    fast_dir = project_dir / ".fast"
+    in_dir = fast_dir / "in"
+    out_dir = fast_dir / "out"
+    scripts_dir = fast_dir / "tools" / "gotest"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    in_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    templates_dir = (
+        Path(__file__).resolve().parent / "integrations" / "gotest" / "templates"
+    )
+
+    mapping = {
+        templates_dir / "tests-map.py": scripts_dir / "tests-map.py",
+        templates_dir / "generate-bbox.py": scripts_dir / "generate-bbox.py",
+        templates_dir
+        / "build-prioritized-tests.py": scripts_dir
+        / "build-prioritized-tests.py",
+        templates_dir / "run-fast.sh": scripts_dir / "run-fast.sh",
+    }
+    for src, dst in mapping.items():
+        if not src.exists():
+            print(f"Warning: missing template {src}")
+            continue
+        text = src.read_text(encoding="utf-8")
+        # Inject defaults for algo/repetitions into runner script
+        if dst.name == "run-fast.sh":
+            text = re.sub(r"^ALG=\".*?\"$", f'ALG="{algo}"', text, flags=re.M)
+            text = re.sub(r"^REPS=\"?\d+\"?$", f"REPS={repetitions}", text, flags=re.M)
+        dst.write_text(text, encoding="utf-8")
+        if dst.suffix == ".sh":
+            try:
+                os.chmod(dst, 0o755)
+            except Exception:
+                pass
+
+    usage_src = templates_dir / "USAGE.md"
+    usage_dst = fast_dir / "USAGE.md"
+    if usage_src.exists():
+        usage_dst.write_text(usage_src.read_text(encoding="utf-8"), encoding="utf-8")
+
+    print("Done. Run: bash .fast/tools/gotest/run-fast.sh")
+    return 0
+
+
 def run_init(argv: List[str]) -> int:
     parser = create_init_parser()
     args = parser.parse_args(argv)
@@ -397,6 +452,9 @@ def run_init(argv: List[str]) -> int:
             repetitions=args.repetitions,
             no_scripts=args.no_scripts,
         )
+    if tool == "gotest":
+        project_dir = Path(args.project_dir).resolve()
+        return _init_gotest(project_dir, algo=args.algo, repetitions=args.repetitions)
     print(f"Unknown init tool: {tool}")
     return 2
 
