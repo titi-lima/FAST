@@ -6,10 +6,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:fast": "node .fast/tools/vitest/run-fast.cjs"
   },
   "devDependencies": {
     "vitest": "^1.6.0"
   }
 }
-

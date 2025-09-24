@@ -7,6 +7,7 @@ include Makefile
 
 # Include all Python files in fast_tcp package
 recursive-include fast_tcp *.py
+recursive-include fast_tcp/integrations/vitest/templates *
 
 # Include documentation and examples
 recursive-include tools *.py

@@ -119,6 +119,18 @@ def create_init_parser():
         "--budget", type=int, default=0, help="Budget B for default config (0=all)"
     )
 
+    p_vitest = sub.add_parser("vitest", help="Initialize Vitest project integration")
+    p_vitest.add_argument(
+        "--project-dir", default=".", help="Path to Vitest project root"
+    )
+    p_vitest.add_argument("--algo", default="FAST-pw", help="FAST variant to use")
+    p_vitest.add_argument("--repetitions", type=int, default=3)
+    p_vitest.add_argument(
+        "--no-scripts",
+        action="store_true",
+        help="Do not modify package.json scripts; only copy .fast helpers",
+    )
+
     return parser
 
 
@@ -304,6 +316,61 @@ def _init_pytest(
     return 0
 
 
+def _init_vitest(
+    project_dir: Path, *, algo: str, repetitions: int, no_scripts: bool
+) -> int:
+    fast_dir = project_dir / ".fast"
+    in_dir = fast_dir / "in"
+    out_dir = fast_dir / "out"
+    scripts_dir = fast_dir / "tools" / "vitest"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    in_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Materialize helper scripts from packaged templates
+    templates_dir = (
+        Path(__file__).resolve().parent / "integrations" / "vitest" / "templates"
+    )
+    mapping = {
+        templates_dir / "tests-map.cjs": scripts_dir / "tests-map.cjs",
+        templates_dir / "generate-bbox.cjs": scripts_dir / "generate-bbox.cjs",
+        templates_dir / "run-fast.cjs": scripts_dir / "run-fast.cjs",
+    }
+    for src, dst in mapping.items():
+        if not src.exists():
+            print(f"Warning: missing template {src}")
+            continue
+        dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+
+    # Copy USAGE.md template
+    usage_src = templates_dir / "USAGE.md"
+    usage_dst = fast_dir / "USAGE.md"
+    if usage_src.exists():
+        usage_dst.write_text(usage_src.read_text(encoding="utf-8"), encoding="utf-8")
+
+    # Optionally update package.json scripts
+    if not no_scripts:
+        pkg = project_dir / "package.json"
+        if pkg.exists():
+            import json
+
+            try:
+                data = json.loads(pkg.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+            scripts = data.get("scripts", {})
+            scripts.setdefault("test", "vitest")
+            scripts["test:fast"] = "node .fast/tools/vitest/run-fast.cjs"
+            data["scripts"] = scripts
+            pkg.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+            print("Updated package.json scripts: added 'test:fast'")
+        else:
+            print("No package.json found; skipped scripts update.")
+
+    print("Done. Run: npm run test:fast")
+    return 0
+
+
 def run_init(argv: List[str]) -> int:
     parser = create_init_parser()
     args = parser.parse_args(argv)
@@ -321,6 +388,14 @@ def run_init(argv: List[str]) -> int:
             b=args.b,
             k=args.k,
             budget=args.budget,
+        )
+    if tool == "vitest":
+        project_dir = Path(args.project_dir).resolve()
+        return _init_vitest(
+            project_dir,
+            algo=args.algo,
+            repetitions=args.repetitions,
+            no_scripts=args.no_scripts,
         )
     print(f"Unknown init tool: {tool}")
     return 2
