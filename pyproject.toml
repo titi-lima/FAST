@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fast-tcp"
-version = "1.1.0"
+version = "1.2.0"
 description = "FAST Approaches to Scalable Similarity-based Test Case Prioritization"
 readme = "README.md"
 license = {text = "GPL-3.0"}

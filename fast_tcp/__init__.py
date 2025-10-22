@@ -5,7 +5,7 @@ A Python library for test case prioritization using similarity-based algorithms
 including LSH-based approaches and competitor algorithms.
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __author__ = "Breno Miranda, Emilio Cruciani, Roberto Verdecchia, Antonia Bertolino"
 __email__ = ""
 __description__ = (

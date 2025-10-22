@@ -22,7 +22,7 @@ def read_requirements():
 
 setup(
     name="fast-tcp",
-    version="1.1.0",
+    version="1.2.0",
     author="Breno Miranda, Emilio Cruciani, Roberto Verdecchia, Antonia Bertolino",
     author_email="",
     description="FAST Approaches to Scalable Similarity-based Test Case Prioritization",
