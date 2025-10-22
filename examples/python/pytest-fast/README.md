@@ -57,3 +57,25 @@ pytest -q examples/python/pytest-fast --fast-tcp --fast-tcp-k 7 --fast-tcp-b 20
 ## Notes
 
 - This example uses black-box prioritization over test nodeids. It does not require coverage.
+
+## Scaling up: large suites
+
+To validate behavior on larger projects, you can synthesize a big pytest suite and benchmark FAST ordering.
+
+1) Generate a large suite (from repo root):
+
+```bash
+python examples/python/pytest-fast/scripts/generate-large-suite.py \
+  --out-dir generated --num-files 200 --tests-per-file 10
+```
+
+This writes tests into `examples/python/pytest-fast/generated/`.
+
+2) Run baseline and FAST-enabled benchmarks:
+
+```bash
+python examples/python/pytest-fast/scripts/benchmark-fast.py \
+  --target examples/python/pytest-fast/generated --repeat 3 --quiet
+```
+
+You can tweak FAST knobs via flags like `--fast-algo`, `--fast-r`, `--fast-b`, `--fast-k`, and `--fast-budget`.

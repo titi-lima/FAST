@@ -55,3 +55,20 @@ pytest --fast-tcp \
 - The plugin works in black-box mode using test nodeids; no coverage required.
 - It preserves tests omitted by a budget by appending them in original order.
 
+### Scaling workflow
+
+Use the included scripts to exercise larger suites:
+
+```bash
+# 1) generate N files * M tests each (writes to examples/python/pytest-fast/generated/)
+python examples/python/pytest-fast/scripts/generate-large-suite.py \
+  --out-dir generated --num-files 200 --tests-per-file 10
+
+# 2) benchmark baseline vs FAST
+python examples/python/pytest-fast/scripts/benchmark-fast.py \
+  --target examples/python/pytest-fast/generated --repeat 3 --quiet \
+  --fast-algo FAST-pw --fast-r 1 --fast-b 10 --fast-k 5 --fast-budget 0
+```
+
+Tip: Set `--fast-budget` to a subset (e.g., 50) to simulate stop-at-budget behavior while ensuring remaining tests still run.
+
