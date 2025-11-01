@@ -17,7 +17,7 @@ from typing import List
 
 import pytest
 
-from ... import fast as _fast
+from ...prioritize import run_blackbox_file
 
 
 def _write_blackbox_input(nodeids: List[str], tmp_dir: Path) -> Path:
@@ -31,46 +31,17 @@ def _write_blackbox_input(nodeids: List[str], tmp_dir: Path) -> Path:
 def _run_fast_blackbox(
     *, input_file: Path, algo: str, r: int, b: int, k: int, budget: int
 ) -> List[int]:
-    if algo == "FAST-pw":
-        _, _, order = _fast.fast_pw(
-            str(input_file), r=r, b=b, bbox=True, k=k, memory=True, B=budget
-        )
-        return order
-
-    def _sel_all(x: int) -> int:
-        return x
-
-    def _sel_sqrt(x: int) -> int:
-        import math
-
-        return int(math.sqrt(x)) + 1
-
-    def _sel_log(x: int) -> int:
-        import math
-
-        return int(math.log(x, 2)) + 1
-
-    def _sel_one(x: int) -> int:
-        return 1
-
-    sels = {
-        "FAST-one": _sel_one,
-        "FAST-log": _sel_log,
-        "FAST-sqrt": _sel_sqrt,
-        "FAST-all": _sel_all,
-    }
-    if algo not in sels:
+    if algo not in {"FAST-pw", "FAST-one", "FAST-log", "FAST-sqrt", "FAST-all"}:
         raise ValueError(f"Unsupported FAST algo: {algo}")
 
-    _, _, order = _fast.fast_(
-        str(input_file),
-        selsize=sels[algo],
+    _, _, order = run_blackbox_file(
+        algo=algo,
+        input_file=str(input_file),
+        signature_dir=str(input_file.parent / "signatures"),
+        k=k,
         r=r,
         b=b,
-        bbox=True,
-        k=k,
-        memory=True,
-        B=budget,
+        budget=budget,
     )
     return order
 

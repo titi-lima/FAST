@@ -55,21 +55,33 @@ fast-tcp clean
 You can also use the library directly in Python:
 
 ```python
-import fast_tcp
+from fast_tcp import run_blackbox_file
 
-# Load a test suite and run FAST-pw prioritization
-from fast_tcp import fast_pw, fast_
-
-# Run FAST-pw algorithm
 input_file = "path/to/test_suite.txt"
-r, b = 1, 10  # LSH parameters
-prioritized_tests = fast_pw(input_file, r, b, bbox=True)
+signature_dir = ".fast/signatures"
+r, b, k = 1, 10, 5
 
-# Run other FAST variants
-def sqrt_selsize(x):
-    return int(x**0.5) + 1
+# FAST-pw prioritization
+prep_time, prio_time, prioritized_tests = run_blackbox_file(
+    algo="FAST-pw",
+    input_file=input_file,
+    signature_dir=signature_dir,
+    k=k,
+    r=r,
+    b=b,
+    budget=0,
+)
 
-prioritized_tests_sqrt = fast_(input_file, sqrt_selsize, r, b, bbox=True)
+# Alternate FAST variants (FAST-log, FAST-sqrt, FAST-one, FAST-all)
+_, _, prioritized_log = run_blackbox_file(
+    algo="FAST-log",
+    input_file=input_file,
+    signature_dir=signature_dir,
+    k=k,
+    r=r,
+    b=b,
+    budget=0,
+)
 ```
 
 ## Available Algorithms
@@ -166,110 +178,29 @@ When running experiments, the following directories are used:
 
 ## Python API Reference
 
-### Core Functions
+Use the `run_blackbox_file` helper to execute any FAST variant in Python:
 
 ```python
-from fast_tcp import fast_pw, fast_
+from fast_tcp import run_blackbox_file
 
-# FAST-pw: Pairwise comparison with LSH
-stime, ptime, prioritized = fast_pw(
-    input_file,     # Path to test suite file
-    r,              # LSH rows parameter
-    b,              # LSH bands parameter
-    bbox=False,     # True for black-box, False for white-box
-    k=5,            # k-shingle size (for black-box)
-    memory=True,    # Keep signatures in memory
-    B=0             # Budget (0 = unlimited)
-)
-
-# FAST with custom sample size function
-stime, ptime, prioritized = fast_(
-    input_file,     # Path to test suite file  
-    selsize,        # Sample size function
-    r,              # LSH rows parameter
-    b,              # LSH bands parameter
-    bbox=False,     # True for black-box, False for white-box
-    k=5,            # k-shingle size (for black-box)
-    memory=True,    # Keep signatures in memory
-    B=0             # Budget (0 = unlimited)
+prep_time, prio_time, prioritized = run_blackbox_file(
+    algo="FAST-pw",
+    input_file="input/flex_v3/flex-bbox.txt",
+    signature_dir=".fast/signatures",
+    k=5,
+    r=1,
+    b=10,
+    budget=0,
 )
 ```
 
-### Competitor Algorithms
-
-```python
-from fast_tcp import str_, i_tsd, gt, ga, ga_s, artd, artf
-
-# String-based similarity (black-box)
-stime, ptime, prioritized = str_(input_file)
-
-# Information Theory-based (black-box)  
-stime, ptime, prioritized = i_tsd(input_file)
-
-# Greedy Total (white-box)
-stime, ptime, prioritized = gt(input_file)
-
-# And so on for other algorithms...
-```
-
-### Utility Functions
-
-```python
-from fast_tcp import apfd
-
-# Calculate APFD metric
-apfd_score = apfd(prioritized_tests, fault_matrix, java_flag=False)
-```
+The helper caches MinHash signatures in the provided directory, making
+subsequent runs faster if the test suite is unchanged.
 
 ## Examples
 
-### Basic Usage
-
-```python
-import fast_tcp
-
-# Run FAST-pw on a black-box test suite
-input_file = "input/flex_v3/flex-bbox.txt"
-stime, ptime, prioritized = fast_tcp.fast_pw(
-    input_file, r=1, b=10, bbox=True, k=5
-)
-
-print(f"Signature time: {stime:.2f}s")
-print(f"Prioritization time: {ptime:.2f}s") 
-print(f"Prioritized order: {prioritized[:10]}")  # First 10 tests
-```
-
-### Custom Sample Size
-
-```python
-import math
-from fast_tcp import fast_
-
-def logarithmic_sample_size(x):
-    return int(math.log(x, 2)) + 1
-
-# Run FAST with logarithmic sample size
-stime, ptime, prioritized = fast_(
-    "input/test_suite.txt",
-    logarithmic_sample_size, 
-    r=1, b=10, bbox=False
-)
-```
-
-### Batch Processing
-
-```python
-import fast_tcp
-
-algorithms = ['FAST-pw', 'FAST-sqrt', 'GT']
-datasets = ['flex_v3', 'grep_v3']
-
-for dataset in datasets:
-    for algorithm in algorithms:
-        print(f"Running {algorithm} on {dataset}")
-        # Run experiments programmatically
-        # ... your experiment code here
-```
+See `test.py` in the repository root for a minimal, self-contained example that
+demonstrates preparation and prioritization flows using the new FAST core.
 
 ## Contributing
 

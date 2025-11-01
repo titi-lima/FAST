@@ -1,25 +1,13 @@
-"""
-This file is part of an ICSE'18 submission that is currently under review.
-For more information visit: https://github.com/icse18-FAST/FAST.
+"""Prioritization driver that bridges the legacy CLI with the new FAST module."""
 
-This is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
+from __future__ import annotations
 
-This software is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this source.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-import math
 import os
 import pickle
+import shutil
 import sys
+import time
+from typing import Iterable, List, Sequence, Tuple
 
 from . import fast
 
@@ -37,162 +25,226 @@ OPTIONS:
 """
 
 
-def bboxPrioritization(name, prog, v, ctype, k, n, r, b, repeats, selsize):
-    javaFlag = True if v == "v0" else False
-
-    fin = "input/{}_{}/{}-{}.txt".format(prog, v, prog, ctype)
-    outpath = "output/{}_{}/".format(prog, v)
-    ppath = outpath + "prioritized/"
-
-    if name == "FAST-" + selsize.__name__[:-1]:
-        if ("{}-{}.tsv".format(name, ctype)) not in set(os.listdir(outpath)):
-            ptimes, stimes = [], []
-            for run in range(repeats):
-                print(" Run", run)
-                stime, ptime, prioritization = fast.fast_(
-                    fin, selsize, r=r, b=b, bbox=True, k=k, memory=not javaFlag
-                )
-                writePrioritization(ppath, name, ctype, run, prioritization)
-                stimes.append(stime)
-                ptimes.append(ptime)
-                print("  Progress: 100%  ")
-                print("  Running time:", stime + ptime)
-            rep = (name, stimes, ptimes)
-            writeOutput(outpath, ctype, rep)
-            print("")
-        else:
-            print(name, "already run.")
-
-    elif name == "FAST-pw":
-        if ("{}-{}.tsv".format(name, ctype)) not in set(os.listdir(outpath)):
-            ptimes, stimes = [], []
-            for run in range(repeats):
-                print(" Run", run)
-                stime, ptime, prioritization = fast.fast_pw(
-                    fin, r, b, bbox=True, k=k, memory=not javaFlag
-                )
-                writePrioritization(ppath, name, ctype, run, prioritization)
-                stimes.append(stime)
-                ptimes.append(ptime)
-                print("  Progress: 100%  ")
-                print("  Running time:", stime + ptime)
-            rep = (name, stimes, ptimes)
-            writeOutput(outpath, ctype, rep)
-            print("")
-        else:
-            print(name, "already run.")
-
-    else:
-        print("Wrong input.")
-        print(usage)
-        exit()
+ALLOWED_ALGOS = {
+    "FAST-pw",
+    "FAST-one",
+    "FAST-log",
+    "FAST-sqrt",
+    "FAST-all",
+}
 
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+def _configure_fast(
+    *,
+    algo: str,
+    k: int,
+    r: int,
+    b: int,
+    budget: int,
+    signature_dir: str,
+) -> None:
+    """Mutate the global FAST module parameters for the current run."""
+
+    fast.DEFAULT_ALG = algo
+    fast.DEFAULT_K = k
+    fast.DEFAULT_R = r
+    fast.DEFAULT_B = b
+    fast.DEFAULT_H = fast.DEFAULT_R * fast.DEFAULT_B
+    fast.DEFAULT_BUDGET = budget
+    fast.SIGNATURE_FOLDER = signature_dir
 
 
-def writePrioritization(path, name, ctype, run, prioritization):
-    fout = "{}/{}-{}-{}.pickle".format(path, name, ctype, run + 1)
-    pickle.dump(prioritization, open(fout, "wb"))
+def _load_test_suite(path: str) -> List[Tuple[int, str]]:
+    """Load a plain-text test suite where each line is a test command."""
+
+    tests: List[Tuple[int, str]] = []
+    with open(path, "r", encoding="utf-8") as fh:
+        for idx, line in enumerate(fh, start=1):
+            content = line.rstrip("\r\n")
+            if not content:
+                continue
+            tests.append((idx, content))
+    if not tests:
+        raise ValueError(f"No tests found in {path}")
+    return tests
 
 
-def writeOutput(outpath, ctype, res):
-    name, stimes, ptimes = res
-    fileout = "{}/{}-{}.tsv".format(outpath, name, ctype)
-    with open(fileout, "w") as fout:
+def run_blackbox_file(
+    *,
+    algo: str,
+    input_file: str,
+    signature_dir: str,
+    k: int,
+    r: int,
+    b: int,
+    budget: int,
+    old_suite: Sequence[Tuple[int, str]] | None = None,
+) -> Tuple[float, float, List[int]]:
+    """Run one prioritization repetition and collect timing metrics."""
+
+    new_suite = _load_test_suite(input_file)
+    old_suite = list(old_suite or [])
+
+    if os.path.exists(signature_dir):
+        shutil.rmtree(signature_dir)
+    os.makedirs(signature_dir, exist_ok=True)
+
+    _configure_fast(
+        algo=algo,
+        k=k,
+        r=r,
+        b=b,
+        budget=budget,
+        signature_dir=signature_dir,
+    )
+
+    start_prep = time.perf_counter()
+    fast.preparation(new_suite, old_suite)
+    prep_time = time.perf_counter() - start_prep
+
+    start_prio = time.perf_counter()
+    prioritized = fast.prioritization(new_suite, old_suite)
+    prio_time = time.perf_counter() - start_prio
+
+    # The FAST module returns a list of IDs in priority order.
+    prioritized_ids = [int(t_id) for t_id in prioritized]
+
+    return prep_time, prio_time, prioritized_ids
+
+
+def bbox_prioritization(
+    name: str,
+    prog: str,
+    version: str,
+    entity: str,
+    *,
+    k: int,
+    r: int,
+    b: int,
+    repeats: int,
+    budget: int,
+) -> None:
+    """Prioritize the specified dataset using the refactored FAST module."""
+
+    input_file = f"input/{prog}_{version}/{prog}-{entity}.txt"
+    if not os.path.exists(input_file):
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+
+    output_root = f"output/{prog}_{version}"
+    prioritized_dir = os.path.join(output_root, "prioritized")
+    os.makedirs(prioritized_dir, exist_ok=True)
+
+    signature_base = os.path.join(output_root, "signatures", name)
+
+    prep_times: List[float] = []
+    prio_times: List[float] = []
+
+    print(f"Running {name} prioritization on {entity} ({repeats} repetition(s))")
+    for run in range(repeats):
+        sig_dir = os.path.join(signature_base, f"run_{run + 1}")
+        print(f"  Repetition {run + 1}/{repeats}")
+        prep_time, prio_time, prioritized = run_blackbox_file(
+            algo=name,
+            input_file=input_file,
+            signature_dir=sig_dir,
+            k=k,
+            r=r,
+            b=b,
+            budget=budget,
+        )
+        prep_times.append(prep_time)
+        prio_times.append(prio_time)
+
+        write_prioritization(prioritized_dir, name, entity, run, prioritized)
+        print(
+            f"    Signature time: {prep_time:.4f}s | Prioritization time: {prio_time:.4f}s"
+        )
+
+    write_output(output_root, entity, name, prep_times, prio_times)
+
+
+def write_prioritization(
+    path: str, name: str, entity: str, run: int, prioritization: Iterable[int]
+) -> None:
+    os.makedirs(path, exist_ok=True)
+    fout = os.path.join(path, f"{name}-{entity}-{run + 1}.pickle")
+    with open(fout, "wb") as fh:
+        pickle.dump(list(prioritization), fh)
+
+
+def write_output(
+    outpath: str,
+    entity: str,
+    algo_name: str,
+    prep_times: Sequence[float],
+    prio_times: Sequence[float],
+) -> None:
+    os.makedirs(outpath, exist_ok=True)
+    fileout = os.path.join(outpath, f"{algo_name}-{entity}.tsv")
+    with open(fileout, "w", encoding="utf-8") as fout:
         fout.write("SignatureTime\tPrioritizationTime\n")
-        for st, pt in zip(stimes, ptimes):
-            tsvLine = "{}\t{}\n".format(st, pt)
-            fout.write(tsvLine)
+        for st, pt in zip(prep_times, prio_times):
+            fout.write(f"{st}\t{pt}\n")
 
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
-def main():
+def main() -> None:
     """Main function that can be called from CLI or directly."""
+
     if len(sys.argv) != 5:
         print("Wrong input.")
         print(usage)
-        exit()
-    prog_v, entity, algname, repeats = sys.argv[1:]
+        raise SystemExit(1)
 
-    repeats = int(repeats)
-    algnames = {
-        "FAST-pw",
-        "FAST-one",
-        "FAST-log",
-        "FAST-sqrt",
-        "FAST-all",
-    }
-    entities = {"bbox"}
+    prog_v, entity, algname, repeats_str = sys.argv[1:]
 
     if "_" not in prog_v:
         print(
             "<dataset> input should be in format 'name_version' (e.g., 'flex_v3', 'custom_v1')."
         )
         print(usage)
-        exit()
-    elif entity not in entities:
+        raise SystemExit(1)
+
+    if entity != "bbox":
         print("<entity> input incorrect.")
         print(usage)
-        exit()
-    elif algname not in algnames:
+        raise SystemExit(1)
+
+    if algname not in ALLOWED_ALGOS:
         print("<algorithm> input incorrect.")
         print(usage)
-        exit()
-    elif repeats <= 0:
-        print("<repetitions> input incorrect.")
+        raise SystemExit(1)
+
+    try:
+        repeats = int(repeats_str)
+    except ValueError:
+        print("<repetitions> must be a positive integer.")
         print(usage)
-        exit()
+        raise SystemExit(1)
 
-    # Split on the last underscore to separate program name and version
-    parts = prog_v.rsplit("_", 1)
-    prog, v = parts[0], parts[1]
+    if repeats <= 0:
+        print("<repetitions> must be positive.")
+        print(usage)
+        raise SystemExit(1)
 
-    directory = "output/{}_{}/".format(prog, v)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    directory += "prioritized/"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    prog, version = prog_v.rsplit("_", 1)
 
-    # FAST parameters
-    k, n, r, b = 5, 10, 1, 10
+    # FAST parameters mirror the defaults from the configuration file.
+    k = fast.DEFAULT_K
+    r = fast.DEFAULT_R
+    b = fast.DEFAULT_B
+    budget = fast.DEFAULT_BUDGET
 
-    # FAST-f sample size
-    if algname == "FAST-all":
-
-        def all_(x):
-            return x
-
-        selsize = all_
-    elif algname == "FAST-sqrt":
-
-        def sqrt_(x):
-            return int(math.sqrt(x)) + 1
-
-        selsize = sqrt_
-    elif algname == "FAST-log":
-
-        def log_(x):
-            return int(math.log(x, 2)) + 1
-
-        selsize = log_
-    elif algname == "FAST-one":
-
-        def one_(x):
-            return 1
-
-        selsize = one_
-    else:
-
-        def pw(x):
-            pass
-
-        selsize = pw
-
-    bboxPrioritization(algname, prog, v, entity, k, n, r, b, repeats, selsize)
+    bbox_prioritization(
+        algname,
+        prog,
+        version,
+        entity,
+        k=k,
+        r=r,
+        b=b,
+        repeats=repeats,
+        budget=budget,
+    )
 
 
 if __name__ == "__main__":

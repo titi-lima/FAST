@@ -12,16 +12,6 @@ __description__ = (
     "FAST Approaches to Scalable Similarity-based Test Case Prioritization"
 )
 
-# Import main functionality
-from .fast import fast_pw, fast_
-from .lsh import kShingles, tcMinhashing, LSHBucket, LSHCandidates, jDistanceEstimate
+from .prioritize import bbox_prioritization, run_blackbox_file
 
-__all__ = [
-    "fast_pw",
-    "fast_",
-    "kShingles",
-    "tcMinhashing",
-    "LSHBucket",
-    "LSHCandidates",
-    "jDistanceEstimate",
-]
+__all__ = ["bbox_prioritization", "run_blackbox_file"]
