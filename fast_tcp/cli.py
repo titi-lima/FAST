@@ -9,6 +9,7 @@ import glob
 import shutil
 import tempfile
 import re
+import time
 from pathlib import Path
 from typing import List
 
@@ -25,6 +26,7 @@ Examples:
   tcp-prioritize --test-dir /path/to/tests --algo FAST-pw --entity bbox
   tcp-prioritize --test-dir ./my_tests --algo FAST-pw --entity function --repetitions 10
   tcp-prioritize --test-dir /tests --algo STR --entity bbox --output-dir ./results
+  tcp-prioritize --test-dir /tests --algo FAST-pw --entity bbox --debug
         """,
     )
 
@@ -72,6 +74,11 @@ Examples:
         choices=["auto", "entity-suffix", "custom"],
         default="auto",
         help="How to identify entity type from filenames (default: auto)",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Print debug information including timing for preparation and prioritization steps",
     )
 
     return parser
@@ -565,7 +572,13 @@ def infer_entity_from_content(file_path):
 def run_prioritization(args):
     """Run test case prioritization."""
     try:
+        overall_start = time.perf_counter() if args.debug else None
+
         # Discover test files in the specified directory
+        if args.debug:
+            print("[DEBUG] Starting prioritization process...")
+            discover_start = time.perf_counter()
+
         print(f"Discovering test files in: {args.test_dir}")
         discovered_files = discover_test_files(
             args.test_dir,
@@ -573,6 +586,10 @@ def run_prioritization(args):
             file_naming=args.file_naming,
             entity=args.entity,
         )
+
+        if args.debug:
+            discover_time = time.perf_counter() - discover_start
+            print(f"[DEBUG] Test discovery time: {discover_time:.4f}s")
 
         if not discovered_files:
             print(f"No test files found for entity '{args.entity}' in {args.test_dir}")
@@ -608,7 +625,15 @@ def run_prioritization(args):
 
             # Copy the file with the expected naming convention
             target_file = dataset_dir / f"{dir_name}-{args.entity}.txt"
+
+            if args.debug:
+                setup_start = time.perf_counter()
+
             shutil.copy2(entity_file, target_file)
+
+            if args.debug:
+                setup_time = time.perf_counter() - setup_start
+                print(f"[DEBUG] File setup time: {setup_time:.4f}s")
 
             # Change to temporary directory to run prioritization
             original_cwd = os.getcwd()
@@ -625,20 +650,35 @@ def run_prioritization(args):
                 ]
 
                 print(
-                    f"Running {args.algo} prioritization on {args.entity} with {args.repetitions} repetitions..."
+                    f"Running {args.algo} prioritization on {args.entity} with {args.repetitions} repetition(s)..."
                 )
+
+                if args.debug:
+                    prio_start = time.perf_counter()
 
                 # Import and run the prioritize functionality
                 # Call the main function from prioritize module
                 prioritize.main()
 
+                if args.debug:
+                    prio_time = time.perf_counter() - prio_start
+                    print(f"[DEBUG] Prioritization execution time: {prio_time:.4f}s")
+
                 # Copy results back to the desired output directory
                 prioritized_dir = temp_output_dir / synthetic_dataset / "prioritized"
                 if prioritized_dir.exists():
+                    if args.debug:
+                        copy_start = time.perf_counter()
+
                     final_output_dir = output_dir / synthetic_dataset
                     if final_output_dir.exists():
                         shutil.rmtree(final_output_dir)
                     shutil.copytree(prioritized_dir, final_output_dir)
+
+                    if args.debug:
+                        copy_time = time.perf_counter() - copy_start
+                        print(f"[DEBUG] Results copy time: {copy_time:.4f}s")
+
                     print(f"Results saved to: {final_output_dir}")
                 else:
                     print("Warning: No prioritized results found")
@@ -648,6 +688,12 @@ def run_prioritization(args):
                 pass
             finally:
                 os.chdir(original_cwd)
+
+        if args.debug:
+            total_time = time.perf_counter() - overall_start
+            print(f"\n[DEBUG] ═════════════════════════════════════════")
+            print(f"[DEBUG] Total execution time: {total_time:.4f}s")
+            print(f"[DEBUG] ═════════════════════════════════════════")
 
     except Exception as e:
         print(f"Error running prioritization: {e}")
