@@ -649,6 +649,10 @@ def run_prioritization(args):
                     str(args.repetitions),
                 ]
 
+                # Set debug environment variable if enabled
+                if args.debug:
+                    os.environ["FAST_TCP_DEBUG"] = "1"
+
                 print(
                     f"Running {args.algo} prioritization on {args.entity} with {args.repetitions} repetition(s)..."
                 )
@@ -688,6 +692,8 @@ def run_prioritization(args):
                 pass
             finally:
                 os.chdir(original_cwd)
+                # Clean up debug environment variable
+                os.environ.pop("FAST_TCP_DEBUG", None)
 
         if args.debug:
             total_time = time.perf_counter() - overall_start

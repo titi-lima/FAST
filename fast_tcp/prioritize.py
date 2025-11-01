@@ -79,6 +79,7 @@ def run_blackbox_file(
     b: int,
     budget: int,
     old_suite: Sequence[Tuple[int, str]] | None = None,
+    debug: bool = False,
 ) -> Tuple[float, float, List[int]]:
     """Run one prioritization repetition and collect timing metrics."""
 
@@ -98,13 +99,23 @@ def run_blackbox_file(
         signature_dir=signature_dir,
     )
 
+    if debug:
+        print(f"[DEBUG] Starting preparation phase (k={k}, r={r}, b={b})")
+
     start_prep = time.perf_counter()
     fast.preparation(new_suite, old_suite)
     prep_time = time.perf_counter() - start_prep
 
+    if debug:
+        print(f"[DEBUG]   Preparation time: {prep_time:.4f}s")
+        print(f"[DEBUG] Starting prioritization phase")
+
     start_prio = time.perf_counter()
     prioritized = fast.prioritization(new_suite, old_suite)
     prio_time = time.perf_counter() - start_prio
+
+    if debug:
+        print(f"[DEBUG]   Prioritization time: {prio_time:.4f}s")
 
     # The FAST module returns a list of IDs in priority order.
     prioritized_ids = [int(t_id) for t_id in prioritized]
@@ -123,6 +134,7 @@ def bbox_prioritization(
     b: int,
     repeats: int,
     budget: int,
+    debug: bool = False,
 ) -> None:
     """Prioritize the specified dataset using the refactored FAST module."""
 
@@ -151,6 +163,7 @@ def bbox_prioritization(
             r=r,
             b=b,
             budget=budget,
+            debug=debug,
         )
         prep_times.append(prep_time)
         prio_times.append(prio_time)
@@ -234,6 +247,9 @@ def main() -> None:
     b = fast.DEFAULT_B
     budget = fast.DEFAULT_BUDGET
 
+    # Check for debug mode via environment variable
+    debug = os.environ.get("FAST_TCP_DEBUG", "").lower() in ("1", "true", "yes")
+
     bbox_prioritization(
         algname,
         prog,
@@ -244,6 +260,7 @@ def main() -> None:
         b=b,
         repeats=repeats,
         budget=budget,
+        debug=debug,
     )
 
 

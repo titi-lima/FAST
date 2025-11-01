@@ -35,7 +35,9 @@ def generate_bbox(tests_dir: Path, out_path: Path) -> None:
     )
 
 
-def prioritize_bbox(data_dir: Path, out_dir: Path, algo: str, repetitions: int) -> None:
+def prioritize_bbox(
+    data_dir: Path, out_dir: Path, algo: str, repetitions: int, debug: bool = False
+) -> None:
     cmd = [
         sys.executable,
         "-m",
@@ -53,6 +55,8 @@ def prioritize_bbox(data_dir: Path, out_dir: Path, algo: str, repetitions: int) 
         "--output-dir",
         str(out_dir),
     ]
+    if debug:
+        cmd.append("--debug")
     subprocess.check_call(cmd)
 
 
@@ -117,6 +121,11 @@ def main() -> int:
     p_macro.add_argument("--project-dir", required=True)
     p_macro.add_argument("--algo", default="FAST-pw")
     p_macro.add_argument("--repetitions", type=int, default=3)
+    p_macro.add_argument(
+        "--debug",
+        action="store_true",
+        help="Print debug information including timing for preparation and prioritization",
+    )
 
     args = parser.parse_args()
 
@@ -137,7 +146,9 @@ def main() -> int:
 
         build_selectors(tests_dir, selectors_path)
         generate_bbox(tests_dir, bbox_path)
-        prioritize_bbox(data_dir, out_dir, args.algo, args.repetitions)
+        prioritize_bbox(
+            data_dir, out_dir, args.algo, args.repetitions, debug=args.debug
+        )
         map_prioritized_to_selectors(
             out_dir, selectors_path, prioritized_selectors_path
         )

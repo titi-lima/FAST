@@ -12,6 +12,7 @@ installed. Users can enable it via the CLI flag or by setting `addopts` in pytes
 from __future__ import annotations
 
 import tempfile
+import time
 from pathlib import Path
 from typing import List
 
@@ -29,12 +30,19 @@ def _write_blackbox_input(nodeids: List[str], tmp_dir: Path) -> Path:
 
 
 def _run_fast_blackbox(
-    *, input_file: Path, algo: str, r: int, b: int, k: int, budget: int
-) -> List[int]:
+    *,
+    input_file: Path,
+    algo: str,
+    r: int,
+    b: int,
+    k: int,
+    budget: int,
+    debug: bool = False,
+) -> tuple[float, float, List[int]]:
     if algo not in {"FAST-pw", "FAST-one", "FAST-log", "FAST-sqrt", "FAST-all"}:
         raise ValueError(f"Unsupported FAST algo: {algo}")
 
-    _, _, order = run_blackbox_file(
+    prep_time, prio_time, order = run_blackbox_file(
         algo=algo,
         input_file=str(input_file),
         signature_dir=str(input_file.parent / "signatures"),
@@ -42,8 +50,9 @@ def _run_fast_blackbox(
         r=r,
         b=b,
         budget=budget,
+        debug=debug,
     )
-    return order
+    return prep_time, prio_time, order
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -77,6 +86,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=0,
         help="Budget B (0=all tests)",
     )
+    group.addoption(
+        "--fast-tcp-debug",
+        action="store_true",
+        help="Print debug information including timing for preparation and prioritization",
+    )
 
 
 def pytest_collection_modifyitems(
@@ -90,14 +104,26 @@ def pytest_collection_modifyitems(
     b = int(config.getoption("--fast-tcp-b"))
     k = int(config.getoption("--fast-tcp-k"))
     budget = int(config.getoption("--fast-tcp-budget"))
+    debug = config.getoption("--fast-tcp-debug")
 
     nodeids = [it.nodeid for it in items]
+
+    overall_start = time.perf_counter() if debug else None
+
     with tempfile.TemporaryDirectory() as td:
         tmp_dir = Path(td)
         input_file = _write_blackbox_input(nodeids, tmp_dir)
-        order = _run_fast_blackbox(
-            input_file=input_file, algo=algo, r=r, b=b, k=k, budget=budget
+        prep_time, prio_time, order = _run_fast_blackbox(
+            input_file=input_file, algo=algo, r=r, b=b, k=k, budget=budget, debug=debug
         )
+
+    if debug:
+        total_time = time.perf_counter() - overall_start
+        print(f"\n[DEBUG] ═════════════════════════════════════════")
+        print(f"[DEBUG] Preparation time: {prep_time:.4f}s")
+        print(f"[DEBUG] Prioritization time: {prio_time:.4f}s")
+        print(f"[DEBUG] Total FAST TCP time: {total_time:.4f}s")
+        print(f"[DEBUG] ═════════════════════════════════════════")
 
     # Map back to pytest items (FAST uses 1-based indices in input order)
     index_to_item = {i + 1: it for i, it in enumerate(items)}
