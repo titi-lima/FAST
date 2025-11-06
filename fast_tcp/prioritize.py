@@ -136,7 +136,7 @@ def bbox_prioritization(
     budget: int,
     debug: bool = False,
 ) -> None:
-    """Prioritize the specified dataset using the refactored FAST module."""
+    """Prioritize the specified dataset."""
 
     input_file = f"input/{prog}_{version}/{prog}-{entity}.txt"
     if not os.path.exists(input_file):
