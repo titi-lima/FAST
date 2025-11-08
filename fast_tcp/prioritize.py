@@ -7,7 +7,7 @@ import pickle
 import shutil
 import sys
 import time
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Sequence, Set, Tuple
 
 import xxhash
 
@@ -56,22 +56,24 @@ def _configure_fast(
     fast.SIGNATURE_FOLDER = signature_dir
 
 
-def _load_test_suite(path: str) -> List[Tuple[int, str]]:
+def _load_test_suite(path: str) -> List[Tuple[str, str]]:
     """Load a plain-text test suite where each line is a test command."""
 
-    tests: List[Tuple[int, str]] = []
+    tests: List[Tuple[str, str]] = []
     with open(path, "r", encoding="utf-8") as fh:
         for idx, line in enumerate(fh, start=1):
             content = line.rstrip("\r\n")
             if not content:
                 continue
-            tests.append((idx, content))
+            tests.append((str(idx), content))
     if not tests:
         raise ValueError(f"No tests found in {path}")
     return tests
 
 
-def partition_test_suite(new_test_suite, old_test_suite):
+def partition_test_suite(
+    new_test_suite: List[Tuple[str, str]], old_test_suite: List[Tuple[str, str]]
+) -> Tuple[Set[str], Set[str], Set[str]]:
     """
     Partition tests into unchanged, deleted, and new sets by comparing
     (test_id, hash(test)) pairs from old and new test suites.
@@ -108,7 +110,7 @@ def run_blackbox_file(
     r: int,
     b: int,
     budget: int,
-    old_suite: Sequence[Tuple[int, str]] | None = None,
+    old_suite: Iterable[Tuple[str, str]] | None = None,
     debug: bool = False,
 ) -> Tuple[float, float, float, List[int]]:
     """Run one prioritization repetition and collect timing metrics."""

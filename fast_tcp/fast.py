@@ -3,6 +3,7 @@ import math
 import os
 import pickle
 import random
+from typing import Dict, Iterable, List, Set, Tuple, Union
 
 import xxhash
 from datasketch import MinHash, MinHashLSH  # type: ignore
@@ -53,7 +54,7 @@ assert DEFAULT_BUDGET >= 0, "budget must be non-negative"
 # SIGNATURES
 
 
-def k_shingles(document):
+def k_shingles(document: str) -> Set[str]:
     """
     Return the set of k-shingles (contiguous substrings of length k) for `text`.
 
@@ -68,7 +69,7 @@ def k_shingles(document):
     return {document[i : i + k] for i in range(len(document) - k + 1)}
 
 
-def generate_signature(document):
+def generate_signature(document: str) -> MinHash:
     """
     Generate a datasketch.MinHash signature for `document`.
 
@@ -92,7 +93,7 @@ def generate_signature(document):
     return m
 
 
-def write_signature(obj, path):
+def write_signature(obj: MinHash, path: str) -> None:
     """
     Serialize `obj` to `path` using pickle in binary mode.
 
@@ -104,7 +105,7 @@ def write_signature(obj, path):
         pickle.dump(obj, f)
 
 
-def read_signature(path):
+def read_signature(path: str) -> MinHash:
     """
     Deserialize and return a pickled object from `path`.
 
@@ -118,7 +119,7 @@ def read_signature(path):
         return pickle.load(f)
 
 
-def load_signatures(new_test_suite):
+def load_signatures(new_test_suite: List[Tuple[str, str]]) -> Dict[str, MinHash]:
     """
     Load persisted (pickle serialization) MinHash signatures for tests in the new test suite.
 
@@ -142,7 +143,7 @@ def load_signatures(new_test_suite):
 # FAST PREPARATION
 
 
-def preparation(test_suite, del_tests):
+def preparation(test_suite: List[Tuple[str, str]], del_tests: Set[str]) -> None:
     """
     Ensure the signature storage directory exists and synchronize persisted
     signatures with the new test suite.
@@ -174,7 +175,11 @@ def preparation(test_suite, del_tests):
 # FAST PRIORITIZATION
 
 
-def lsh_buckets(test_suite, remaining_tests, signatures):
+def lsh_buckets(
+    test_suite: Iterable[str],
+    remaining_tests: Set[str],
+    signatures: Dict[str, MinHash],
+) -> MinHashLSH:
     """
     Build an LSH index (MinHashLSH) for the tests currently remaining.
 
@@ -199,7 +204,9 @@ def lsh_buckets(test_suite, remaining_tests, signatures):
     return lsh
 
 
-def cumulative_signature(prioritized_test_suite, signatures):
+def cumulative_signature(
+    prioritized_test_suite: Iterable[str], signatures: Dict[str, MinHash]
+) -> MinHash:
     """
     Build a cumulative MinHash signature that merges signatures of tests
     that have already been prioritized (i.e., not in remaining_tests).
@@ -222,7 +229,9 @@ def cumulative_signature(prioritized_test_suite, signatures):
     return cumulative_sig
 
 
-def generate_candidates(lsh, remaining_tests, cumulative_sig):
+def generate_candidates(
+    lsh: MinHashLSH, remaining_tests: Set[str], cumulative_sig: MinHash
+) -> List[str]:
     """
     Generate a candidate set of tests to select next.
 
@@ -252,7 +261,7 @@ def generate_candidates(lsh, remaining_tests, cumulative_sig):
     return list(candidates)
 
 
-def candidate_set_size(x):
+def candidate_set_size(x: int) -> int:
     """
     Compute the size of the candidate subset to pick based on the algorithm.
 
@@ -282,7 +291,9 @@ def candidate_set_size(x):
     return max(1, min(set_size, x))
 
 
-def select_next_tests(candidates, signatures, cumulative_sig):
+def select_next_tests(
+    candidates: List[str], signatures: Dict[str, MinHash], cumulative_sig: MinHash
+) -> List[str]:
     """
     Select the next test(s) to add to the prioritized suite.
 
@@ -316,7 +327,12 @@ def select_next_tests(candidates, signatures, cumulative_sig):
     return next_tests
 
 
-def fast_alg(test_suite, signatures, prioritized_test_suite, budget):
+def fast_alg(
+    test_suite: Set[str],
+    signatures: Dict[str, MinHash],
+    prioritized_test_suite: List[str],
+    budget: int,
+) -> List[str]:
     """
     Produce an ordering for tests in `test_suite` using the FAST algorithm.
 
@@ -354,7 +370,7 @@ def fast_alg(test_suite, signatures, prioritized_test_suite, budget):
     prioritized_global = prioritized_test_suite + prioritized_local
     cumulative_sig = cumulative_signature(prioritized_global, signatures)
 
-    threshold = len(test_suite)
+    threshold: Union[int, float] = len(test_suite)
     while remaining_tests and len(prioritized_local) < budget:
         # recompute lsh bucket every time we halve the number of remaining tests
         # this makes the computation of candidates more efficient
@@ -372,7 +388,11 @@ def fast_alg(test_suite, signatures, prioritized_test_suite, budget):
     return prioritized_local[:budget]
 
 
-def prioritization(test_suite, new_tests, old_tests):
+def prioritization(
+    test_suite: List[Tuple[str, str]],
+    new_tests: Set[str],
+    old_tests: Set[str],
+) -> List[str]:
     """
     High-level FAST prioritization entry point.
 
@@ -399,7 +419,7 @@ def prioritization(test_suite, new_tests, old_tests):
         budget = len(test_suite)
 
     signatures = load_signatures(test_suite)
-    prioritized_test_suite = []
+    prioritized_test_suite: List[str] = []
 
     if new_tests:
         budget_new = budget
