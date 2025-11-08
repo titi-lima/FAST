@@ -5,7 +5,7 @@ import pickle
 import random
 
 import xxhash
-from datasketch import MinHash, MinHashLSH # type: ignore
+from datasketch import MinHash, MinHashLSH  # type: ignore
 
 ###############################################################################
 # CONFIGURATION PARAMETERS
@@ -24,7 +24,9 @@ else:
 
 # Default configuration parameters. Change in the JSON file only!
 # If the file is missing or malformed, defaults are used
-SIGNATURE_FOLDER = config.get("signature_folder", "signatures")  # Folder of MinHash signatures
+SIGNATURE_FOLDER = config.get(
+    "signature_folder", "signatures"
+)  # Folder of MinHash signatures
 DEFAULT_K = config.get("k", 5)  # k-shingles parameter
 DEFAULT_R = config.get("r", 1)  # lsh: number of rows
 DEFAULT_B = config.get("b", 10)  # lsh: number of bands
@@ -37,7 +39,13 @@ assert DEFAULT_K > 0, "k must be positive"
 assert DEFAULT_R > 0, "r must be positive"
 assert DEFAULT_B > 0, "b must be positive"
 assert DEFAULT_H == DEFAULT_R * DEFAULT_B, "h must equal r * b"
-assert DEFAULT_ALG in {"FAST-pw", "FAST-one", "FAST-log", "FAST-sqrt", "FAST-all"}, "unknown alg"
+assert DEFAULT_ALG in {
+    "FAST-pw",
+    "FAST-one",
+    "FAST-log",
+    "FAST-sqrt",
+    "FAST-all",
+}, "unknown alg"
 assert DEFAULT_BUDGET >= 0, "budget must be non-negative"
 
 
@@ -395,12 +403,16 @@ def prioritization(test_suite, new_tests, old_tests):
 
     if new_tests:
         budget_new = budget
-        prioritized_new = fast_alg(new_tests, signatures, prioritized_test_suite, budget_new)
+        prioritized_new = fast_alg(
+            new_tests, signatures, prioritized_test_suite, budget_new
+        )
         prioritized_test_suite.extend(prioritized_new)
 
     if len(prioritized_test_suite) < budget:
         budget_old = budget - len(prioritized_test_suite)
-        prioritized_old = fast_alg(old_tests, signatures, prioritized_test_suite, budget_old)
+        prioritized_old = fast_alg(
+            old_tests, signatures, prioritized_test_suite, budget_old
+        )
         prioritized_test_suite.extend(prioritized_old)
 
     return prioritized_test_suite[:budget]
