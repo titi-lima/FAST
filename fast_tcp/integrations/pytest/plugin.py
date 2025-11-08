@@ -38,11 +38,11 @@ def _run_fast_blackbox(
     k: int,
     budget: int,
     debug: bool = False,
-) -> tuple[float, float, List[int]]:
+) -> tuple[float, float, float, List[int]]:
     if algo not in {"FAST-pw", "FAST-one", "FAST-log", "FAST-sqrt", "FAST-all"}:
         raise ValueError(f"Unsupported FAST algo: {algo}")
 
-    prep_time, prio_time, order = run_blackbox_file(
+    partition_time, prep_time, prio_time, order = run_blackbox_file(
         algo=algo,
         input_file=str(input_file),
         signature_dir=str(input_file.parent / "signatures"),
@@ -52,7 +52,7 @@ def _run_fast_blackbox(
         budget=budget,
         debug=debug,
     )
-    return prep_time, prio_time, order
+    return partition_time, prep_time, prio_time, order
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -113,13 +113,14 @@ def pytest_collection_modifyitems(
     with tempfile.TemporaryDirectory() as td:
         tmp_dir = Path(td)
         input_file = _write_blackbox_input(nodeids, tmp_dir)
-        prep_time, prio_time, order = _run_fast_blackbox(
+        partition_time, prep_time, prio_time, order = _run_fast_blackbox(
             input_file=input_file, algo=algo, r=r, b=b, k=k, budget=budget, debug=debug
         )
 
     if debug:
-        total_time = time.perf_counter() - overall_start
+        total_time = (time.perf_counter() - overall_start) if overall_start else 0
         print(f"\n[DEBUG] ═════════════════════════════════════════")
+        print(f"[DEBUG] Partition time: {partition_time:.4f}s")
         print(f"[DEBUG] Preparation time: {prep_time:.4f}s")
         print(f"[DEBUG] Prioritization time: {prio_time:.4f}s")
         print(f"[DEBUG] Total FAST TCP time: {total_time:.4f}s")
