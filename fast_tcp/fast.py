@@ -3,9 +3,10 @@ import math
 import os
 import pickle
 import random
+from typing import Dict, Iterable, List, Set, Tuple, Union
 
 import xxhash
-from datasketch import MinHash, MinHashLSH
+from datasketch import MinHash, MinHashLSH  # type: ignore
 
 ###############################################################################
 # CONFIGURATION PARAMETERS
@@ -24,7 +25,9 @@ else:
 
 # Default configuration parameters. Change in the JSON file only!
 # If the file is missing or malformed, defaults are used
-SIGNATURE_FOLDER = config.get("signature_folder", "signatures")  # Folder of MinHash signatures
+SIGNATURE_FOLDER = config.get(
+    "signature_folder", "signatures"
+)  # Folder of MinHash signatures
 DEFAULT_K = config.get("k", 5)  # k-shingles parameter
 DEFAULT_R = config.get("r", 1)  # lsh: number of rows
 DEFAULT_B = config.get("b", 10)  # lsh: number of bands
@@ -37,7 +40,13 @@ assert DEFAULT_K > 0, "k must be positive"
 assert DEFAULT_R > 0, "r must be positive"
 assert DEFAULT_B > 0, "b must be positive"
 assert DEFAULT_H == DEFAULT_R * DEFAULT_B, "h must equal r * b"
-assert DEFAULT_ALG in {"FAST-pw", "FAST-one", "FAST-log", "FAST-sqrt", "FAST-all"}, "unknown alg"
+assert DEFAULT_ALG in {
+    "FAST-pw",
+    "FAST-one",
+    "FAST-log",
+    "FAST-sqrt",
+    "FAST-all",
+}, "unknown alg"
 assert DEFAULT_BUDGET >= 0, "budget must be non-negative"
 
 
@@ -45,7 +54,7 @@ assert DEFAULT_BUDGET >= 0, "budget must be non-negative"
 # SIGNATURES
 
 
-def k_shingles(document):
+def k_shingles(document: str) -> Set[str]:
     """
     Return the set of k-shingles (contiguous substrings of length k) for `text`.
 
@@ -60,7 +69,7 @@ def k_shingles(document):
     return {document[i : i + k] for i in range(len(document) - k + 1)}
 
 
-def generate_signature(document):
+def generate_signature(document: str) -> MinHash:
     """
     Generate a datasketch.MinHash signature for `document`.
 
@@ -80,10 +89,11 @@ def generate_signature(document):
     m = MinHash(num_perm=h, hashfunc=xxhash.xxh64_intdigest)
     for s in shingles:
         m.update(s.encode("utf8"))
+
     return m
 
 
-def write_signature(obj, path):
+def write_signature(obj: MinHash, path: str) -> None:
     """
     Serialize `obj` to `path` using pickle in binary mode.
 
@@ -95,7 +105,7 @@ def write_signature(obj, path):
         pickle.dump(obj, f)
 
 
-def read_signature(path):
+def read_signature(path: str) -> MinHash:
     """
     Deserialize and return a pickled object from `path`.
 
@@ -109,7 +119,7 @@ def read_signature(path):
         return pickle.load(f)
 
 
-def load_signatures(new_test_suite):
+def load_signatures(new_test_suite: List[Tuple[str, str]]) -> Dict[str, MinHash]:
     """
     Load persisted (pickle serialization) MinHash signatures for tests in the new test suite.
 
@@ -125,42 +135,15 @@ def load_signatures(new_test_suite):
     for t_id, _ in new_test_suite:
         sig = read_signature(os.path.join(path, f"{t_id}.pkl"))
         signatures[t_id] = sig
+
     return signatures
-
-
-###############################################################################
-# PARTITION TEST SUITE
-
-
-def partition_test_suite(old_test_suite, new_test_suite):
-    """
-    Partition tests into unchanged, deleted, and new sets by comparing
-    (test_id, hash(test)) pairs from old and new test suites.
-
-    Parameters:
-    - old_test_suite: iterable of (t_id, test_content) representing the previous suite.
-    - new_test_suite: iterable of (t_id, test_content) representing the current suite.
-
-    Returns:
-    - old_tests: set of t_id present in both suites with identical content.
-    - del_tests: set of t_id present in old suite but not in new suite (or changed).
-    - new_tests: set of t_id present in new suite but not in old suite (or changed).
-    """
-    old_hash = {(t_id, xxhash.xxh64_intdigest(t.encode("utf8"))) for t_id, t in old_test_suite}
-    new_hash = {(t_id, xxhash.xxh64_intdigest(t.encode("utf8"))) for t_id, t in new_test_suite}
-
-    new_tests = {t_id for t_id, _ in new_hash - old_hash}
-    old_tests = {t_id for t_id, _ in old_hash & new_hash}
-    del_tests = {t_id for t_id, _ in old_hash - new_hash}
-
-    return new_tests, old_tests, del_tests
 
 
 ###############################################################################
 # FAST PREPARATION
 
 
-def preparation(new_test_suite, old_test_suite):
+def preparation(test_suite: List[Tuple[str, str]], del_tests: Set[str]) -> None:
     """
     Ensure the signature storage directory exists and synchronize persisted
     signatures with the new test suite.
@@ -170,18 +153,19 @@ def preparation(new_test_suite, old_test_suite):
     - Generate and store signatures for tests that do not yet have persisted files.
 
     Parameters:
-    - new_test_suite: iterable of (t_id, test_content).
-    - old_test_suite: iterable of (t_id, test_content) from the previous run.
+    - test_suite: iterable of (t_id, test_content).
+    - del_tests: set of t_id representing tests deleted from the previous suite.
     """
     path = SIGNATURE_FOLDER
-
-    _, _, del_tests = partition_test_suite(old_test_suite, new_test_suite)
-
     os.makedirs(path, exist_ok=True)
+
+    # Remove signatures for deleted tests
     for t_id in del_tests:
         if os.path.exists(os.path.join(path, f"{t_id}.pkl")):
             os.remove(os.path.join(path, f"{t_id}.pkl"))
-    for t_id, t in new_test_suite:
+
+    # Generate signatures if they do not exist yet
+    for t_id, t in test_suite:
         if not os.path.exists(os.path.join(path, f"{t_id}.pkl")):
             sig = generate_signature(t)
             write_signature(sig, os.path.join(path, f"{t_id}.pkl"))
@@ -191,7 +175,11 @@ def preparation(new_test_suite, old_test_suite):
 # FAST PRIORITIZATION
 
 
-def lsh_buckets(test_suite, remaining_tests, signatures):
+def lsh_buckets(
+    test_suite: Iterable[str],
+    remaining_tests: Set[str],
+    signatures: Dict[str, MinHash],
+) -> MinHashLSH:
     """
     Build an LSH index (MinHashLSH) for the tests currently remaining.
 
@@ -212,10 +200,13 @@ def lsh_buckets(test_suite, remaining_tests, signatures):
         sig = signatures[t_id]
         if t_id in remaining_tests:
             lsh.insert(t_id, sig)
+
     return lsh
 
 
-def cumulative_signature(prioritized_test_suite, signatures):
+def cumulative_signature(
+    prioritized_test_suite: Iterable[str], signatures: Dict[str, MinHash]
+) -> MinHash:
     """
     Build a cumulative MinHash signature that merges signatures of tests
     that have already been prioritized (i.e., not in remaining_tests).
@@ -234,10 +225,13 @@ def cumulative_signature(prioritized_test_suite, signatures):
     for t_id in prioritized_test_suite:
         sig = signatures[t_id]
         cumulative_sig.merge(sig)
+
     return cumulative_sig
 
 
-def generate_candidates(lsh, remaining_tests, cumulative_sig):
+def generate_candidates(
+    lsh: MinHashLSH, remaining_tests: Set[str], cumulative_sig: MinHash
+) -> List[str]:
     """
     Generate a candidate set of tests to select next.
 
@@ -263,10 +257,11 @@ def generate_candidates(lsh, remaining_tests, cumulative_sig):
         candidates = remaining_tests - similar_candidates
         if not candidates:
             candidates = remaining_tests
+
     return list(candidates)
 
 
-def candidate_set_size(x):
+def candidate_set_size(x: int) -> int:
     """
     Compute the size of the candidate subset to pick based on the algorithm.
 
@@ -292,10 +287,13 @@ def candidate_set_size(x):
         set_size = int(algs[alg](x))
     except KeyError:
         raise ValueError(f"Unknown algorithm: {alg}")
+
     return max(1, min(set_size, x))
 
 
-def select_next_tests(candidates, signatures, cumulative_sig):
+def select_next_tests(
+    candidates: List[str], signatures: Dict[str, MinHash], cumulative_sig: MinHash
+) -> List[str]:
     """
     Select the next test(s) to add to the prioritized suite.
 
@@ -325,10 +323,16 @@ def select_next_tests(candidates, signatures, cumulative_sig):
         sel_size = candidate_set_size(len(candidates))
         next_tests = random.sample(candidates, sel_size)
     random.shuffle(next_tests)
+
     return next_tests
 
 
-def fast_alg(test_suite, signatures, prioritized_test_suite, budget):
+def fast_alg(
+    test_suite: Set[str],
+    signatures: Dict[str, MinHash],
+    prioritized_test_suite: List[str],
+    budget: int,
+) -> List[str]:
     """
     Produce an ordering for tests in `test_suite` using the FAST algorithm.
 
@@ -366,7 +370,7 @@ def fast_alg(test_suite, signatures, prioritized_test_suite, budget):
     prioritized_global = prioritized_test_suite + prioritized_local
     cumulative_sig = cumulative_signature(prioritized_global, signatures)
 
-    threshold = len(test_suite)
+    threshold: Union[int, float] = len(test_suite)
     while remaining_tests and len(prioritized_local) < budget:
         # recompute lsh bucket every time we halve the number of remaining tests
         # this makes the computation of candidates more efficient
@@ -384,7 +388,11 @@ def fast_alg(test_suite, signatures, prioritized_test_suite, budget):
     return prioritized_local[:budget]
 
 
-def prioritization(new_test_suite, old_test_suite):
+def prioritization(
+    test_suite: List[Tuple[str, str]],
+    new_tests: Set[str],
+    old_tests: Set[str],
+) -> List[str]:
     """
     High-level FAST prioritization entry point.
 
@@ -398,8 +406,9 @@ def prioritization(new_test_suite, old_test_suite):
     5. Return the prioritized list truncated to `budget`.
 
     Parameters:
-    - new_test_suite: iterable of (t_id, test_content) for the current run.
-    - old_test_suite: iterable of (t_id, test_content) from the previous run.
+    - test_suite: iterable of (t_id, test_content) for the current run.
+    - new_tests: set of t_id representing tests new to the suite.
+    - old_tests: set of t_id representing unchanged tests in the suite.
 
     Returns:
     - prioritized_test_suite: list of t_id ordered by priority, length <= budget.
@@ -407,19 +416,23 @@ def prioritization(new_test_suite, old_test_suite):
     budget = DEFAULT_BUDGET
 
     if budget == 0:
-        budget = len(new_test_suite)
+        budget = len(test_suite)
 
-    signatures = load_signatures(new_test_suite)
-    new_tests, old_tests, _ = partition_test_suite(old_test_suite, new_test_suite)
-    prioritized_test_suite = []
+    signatures = load_signatures(test_suite)
+    prioritized_test_suite: List[str] = []
+
     if new_tests:
         budget_new = budget
-        prioritized_new = fast_alg(new_tests, signatures, prioritized_test_suite, budget_new)
+        prioritized_new = fast_alg(
+            new_tests, signatures, prioritized_test_suite, budget_new
+        )
         prioritized_test_suite.extend(prioritized_new)
+
     if len(prioritized_test_suite) < budget:
         budget_old = budget - len(prioritized_test_suite)
-        prioritized_old = fast_alg(old_tests, signatures, prioritized_test_suite, budget_old)
+        prioritized_old = fast_alg(
+            old_tests, signatures, prioritized_test_suite, budget_old
+        )
         prioritized_test_suite.extend(prioritized_old)
+
     return prioritized_test_suite[:budget]
-
-

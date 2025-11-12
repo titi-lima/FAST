@@ -7,7 +7,9 @@ import pickle
 import shutil
 import sys
 import time
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Sequence, Set, Tuple
+
+import xxhash
 
 from . import fast
 
@@ -54,19 +56,49 @@ def _configure_fast(
     fast.SIGNATURE_FOLDER = signature_dir
 
 
-def _load_test_suite(path: str) -> List[Tuple[int, str]]:
+def _load_test_suite(path: str) -> List[Tuple[str, str]]:
     """Load a plain-text test suite where each line is a test command."""
 
-    tests: List[Tuple[int, str]] = []
+    tests: List[Tuple[str, str]] = []
     with open(path, "r", encoding="utf-8") as fh:
         for idx, line in enumerate(fh, start=1):
             content = line.rstrip("\r\n")
             if not content:
                 continue
-            tests.append((idx, content))
+            tests.append((str(idx), content))
     if not tests:
         raise ValueError(f"No tests found in {path}")
     return tests
+
+
+def partition_test_suite(
+    new_test_suite: List[Tuple[str, str]], old_test_suite: List[Tuple[str, str]]
+) -> Tuple[Set[str], Set[str], Set[str]]:
+    """
+    Partition tests into unchanged, deleted, and new sets by comparing
+    (test_id, hash(test)) pairs from old and new test suites.
+
+    Parameters:
+    - new_test_suite: iterable of (t_id, test_content) representing the current suite.
+    - old_test_suite: iterable of (t_id, test_content) representing the previous suite.
+
+    Returns:
+    - new_tests: set of t_id present in new suite but not in old suite (or changed).
+    - old_tests: set of t_id present in both suites with identical content.
+    - del_tests: set of t_id present in old suite but not in new suite (or changed).
+    """
+    new_hash = {
+        (t_id, xxhash.xxh64_intdigest(t.encode("utf8"))) for t_id, t in new_test_suite
+    }
+    old_hash = {
+        (t_id, xxhash.xxh64_intdigest(t.encode("utf8"))) for t_id, t in old_test_suite
+    }
+
+    new_tests = {t_id for t_id, _ in new_hash - old_hash}  # new or changed
+    old_tests = {t_id for t_id, _ in old_hash & new_hash}  # unchanged
+    del_tests = {t_id for t_id, _ in old_hash - new_hash}  # deleted or changed
+
+    return new_tests, old_tests, del_tests
 
 
 def run_blackbox_file(
@@ -78,9 +110,9 @@ def run_blackbox_file(
     r: int,
     b: int,
     budget: int,
-    old_suite: Sequence[Tuple[int, str]] | None = None,
+    old_suite: Iterable[Tuple[str, str]] | None = None,
     debug: bool = False,
-) -> Tuple[float, float, List[int]]:
+) -> Tuple[float, float, float, List[int]]:
     """Run one prioritization repetition and collect timing metrics."""
 
     new_suite = _load_test_suite(input_file)
@@ -100,10 +132,19 @@ def run_blackbox_file(
     )
 
     if debug:
+        print(f"[DEBUG] Starting partition phase")
+
+    start_partition = time.perf_counter()
+    new_tests, old_tests, del_tests = partition_test_suite(new_suite, old_suite)
+    partition_time = time.perf_counter() - start_partition
+    if debug:
+        print(f"[DEBUG]   Partition time: {partition_time:.4f}s")
+
+    if debug:
         print(f"[DEBUG] Starting preparation phase (k={k}, r={r}, b={b})")
 
     start_prep = time.perf_counter()
-    fast.preparation(new_suite, old_suite)
+    fast.preparation(new_suite, del_tests)
     prep_time = time.perf_counter() - start_prep
 
     if debug:
@@ -111,7 +152,9 @@ def run_blackbox_file(
         print(f"[DEBUG] Starting prioritization phase")
 
     start_prio = time.perf_counter()
-    prioritized = fast.prioritization(new_suite, old_suite)
+    prioritized = fast.prioritization(
+        new_suite, new_tests=new_tests, old_tests=old_tests
+    )
     prio_time = time.perf_counter() - start_prio
 
     if debug:
@@ -120,7 +163,7 @@ def run_blackbox_file(
     # The FAST module returns a list of IDs in priority order.
     prioritized_ids = [int(t_id) for t_id in prioritized]
 
-    return prep_time, prio_time, prioritized_ids
+    return partition_time, prep_time, prio_time, prioritized_ids
 
 
 def bbox_prioritization(
@@ -136,7 +179,36 @@ def bbox_prioritization(
     budget: int,
     debug: bool = False,
 ) -> None:
-    """Prioritize the specified dataset."""
+    """Prioritize the specified dataset.
+
+    This function expects the dataset to be in the format <prog>_<version>/<prog>-<entity>.txt.
+    The dataset is expected to be a plain-text file where each line is a test command.
+    It will prioritize the dataset and save the results to the output directory.
+
+    The output directory is in the format <prog>_<version>/prioritized.
+
+    The prioritized results are saved in the format <name>-<entity>-<run>.pickle.
+
+    The output is saved in the format <name>-<entity>.tsv.
+
+    Args:
+        name: The name of the algorithm.
+        prog: The name of the program.
+        version: The version of the program.
+        entity: The entity to prioritize.
+        k: The k parameter.
+        r: The r parameter.
+        b: The b parameter.
+        budget: The budget.
+        debug: Whether to print debug information.
+        repeats: The number of repetitions.
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If the input file is not found.
+    """
 
     input_file = f"input/{prog}_{version}/{prog}-{entity}.txt"
     if not os.path.exists(input_file):
@@ -150,12 +222,13 @@ def bbox_prioritization(
 
     prep_times: List[float] = []
     prio_times: List[float] = []
+    partition_times: List[float] = []
 
     print(f"Running {name} prioritization on {entity} ({repeats} repetition(s))")
     for run in range(repeats):
         sig_dir = os.path.join(signature_base, f"run_{run + 1}")
         print(f"  Repetition {run + 1}/{repeats}")
-        prep_time, prio_time, prioritized = run_blackbox_file(
+        partition_time, prep_time, prio_time, prioritized = run_blackbox_file(
             algo=name,
             input_file=input_file,
             signature_dir=sig_dir,
@@ -165,15 +238,16 @@ def bbox_prioritization(
             budget=budget,
             debug=debug,
         )
+        partition_times.append(partition_time)
         prep_times.append(prep_time)
         prio_times.append(prio_time)
 
         write_prioritization(prioritized_dir, name, entity, run, prioritized)
         print(
-            f"    Signature time: {prep_time:.4f}s | Prioritization time: {prio_time:.4f}s"
+            f"    Partition time: {partition_time:.4f}s | Preparation time: {prep_time:.4f}s | Prioritization time: {prio_time:.4f}s"
         )
 
-    write_output(output_root, entity, name, prep_times, prio_times)
+    write_output(output_root, entity, name, partition_times, prep_times, prio_times)
 
 
 def write_prioritization(
@@ -189,6 +263,7 @@ def write_output(
     outpath: str,
     entity: str,
     algo_name: str,
+    partition_times: Sequence[float],
     prep_times: Sequence[float],
     prio_times: Sequence[float],
 ) -> None:
@@ -196,8 +271,8 @@ def write_output(
     fileout = os.path.join(outpath, f"{algo_name}-{entity}.tsv")
     with open(fileout, "w", encoding="utf-8") as fout:
         fout.write("SignatureTime\tPrioritizationTime\n")
-        for st, pt in zip(prep_times, prio_times):
-            fout.write(f"{st}\t{pt}\n")
+        for st, pt, pt2 in zip(partition_times, prep_times, prio_times):
+            fout.write(f"{st}\t{pt}\t{pt2}\n")
 
 
 def main() -> None:
