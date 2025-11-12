@@ -179,7 +179,36 @@ def bbox_prioritization(
     budget: int,
     debug: bool = False,
 ) -> None:
-    """Prioritize the specified dataset."""
+    """Prioritize the specified dataset.
+
+    This function expects the dataset to be in the format <prog>_<version>/<prog>-<entity>.txt.
+    The dataset is expected to be a plain-text file where each line is a test command.
+    It will prioritize the dataset and save the results to the output directory.
+
+    The output directory is in the format <prog>_<version>/prioritized.
+
+    The prioritized results are saved in the format <name>-<entity>-<run>.pickle.
+
+    The output is saved in the format <name>-<entity>.tsv.
+
+    Args:
+        name: The name of the algorithm.
+        prog: The name of the program.
+        version: The version of the program.
+        entity: The entity to prioritize.
+        k: The k parameter.
+        r: The r parameter.
+        b: The b parameter.
+        budget: The budget.
+        debug: Whether to print debug information.
+        repeats: The number of repetitions.
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If the input file is not found.
+    """
 
     input_file = f"input/{prog}_{version}/{prog}-{entity}.txt"
     if not os.path.exists(input_file):
