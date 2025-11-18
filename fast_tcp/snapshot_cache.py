@@ -36,6 +36,7 @@ __all__ = [
 
 _DEFAULT_IGNORE_DIRS: Tuple[str, ...] = (
     ".git",
+    ".fast",
     "__pycache__",
     ".pytest_cache",
     ".mypy_cache",
