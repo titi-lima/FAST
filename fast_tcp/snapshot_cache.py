@@ -17,7 +17,7 @@ import stat
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple
 
 try:
     from . import __version__ as _FAST_TCP_VERSION
@@ -254,6 +254,7 @@ def snapshot_prioritization(project_root: Path | str) -> str:
     initialize_snapshot_cache(root)
 
     pending = _PENDING_TREES.pop(root, None)
+    write_env = _snapshot_env(root, None)
     if pending is None:
         index_path = _select_index_path(root)
         env = _snapshot_env(root, index_path)
@@ -265,10 +266,18 @@ def snapshot_prioritization(project_root: Path | str) -> str:
     else:
         tree = pending.tree
         ignore_hash = pending.ignore_hash
-        env = _snapshot_env(root, None)
+        env = write_env
 
-    _update_snapshot_ref(root, env, tree)
+    previous_tree = _resolve_latest_tree(root, write_env)
+    tree_changed = previous_tree != tree
+
+    if tree_changed:
+        _update_snapshot_ref(root, write_env, tree)
+
     _write_manifest(root, tree, ignore_hash)
+
+    if tree_changed:
+        _prune_snapshot_objects(root, write_env)
     return tree
 
 
@@ -475,8 +484,6 @@ def _update_snapshot_ref(root: Path, env: Dict[str, str], tree: str) -> None:
 
 def _write_manifest(root: Path, tree: str, ignore_hash: str) -> None:
     manifest_dir = root / ".fast" / "manifests"
-    manifest_dir.mkdir(parents=True, exist_ok=True)
-    manifest_path = manifest_dir / "latest.json"
     manifest_data = {
         "created_at": _dt.datetime.now(tz=_dt.timezone.utc).isoformat(),
         "tree": tree,
@@ -485,8 +492,23 @@ def _write_manifest(root: Path, tree: str, ignore_hash: str) -> None:
         "python": platform.python_version(),
         "ignore_hash": ignore_hash,
     }
+    if _manifest_matches(root, manifest_data):
+        return
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = manifest_dir / "latest.json"
     manifest_path.write_text(
-        json.dumps(manifest_data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(manifest_data, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _manifest_matches(root: Path, manifest_data: dict[str, Any]) -> bool:
+    current = _read_latest_manifest(root)
+    if not current:
+        return False
+    comparable_fields = ("tree", "kind", "tool_version", "python", "ignore_hash")
+    return all(
+        current.get(field) == manifest_data[field] for field in comparable_fields
     )
 
 
@@ -498,6 +520,15 @@ def _read_latest_manifest(root: Path) -> Optional[Dict[str, object]]:
         return json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         return None
+
+
+def _prune_snapshot_objects(root: Path, env: Dict[str, str]) -> None:
+    _run_git(
+        ["gc", "--prune=now"],
+        cwd=root,
+        env=env,
+        check=True,
+    )
 
 
 def _run_git(
