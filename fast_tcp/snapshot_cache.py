@@ -28,8 +28,8 @@ except Exception:  # pragma: no cover - fallback when package metadata unavailab
 __all__ = [
     "SnapshotDiff",
     "initialize_snapshot_cache",
-    "detect_changes_preparation_step1",
-    "snapshot_prioritization_step2",
+    "detect_changes_preparation",
+    "snapshot_prioritization",
     "discard_pending_snapshot",
     "load_file_from_snapshot",
 ]
@@ -196,7 +196,7 @@ def initialize_snapshot_cache(project_root: Path | str) -> None:
         )
 
 
-def detect_changes_preparation_step1(project_root: Path | str) -> SnapshotDiff:
+def detect_changes_preparation(project_root: Path | str) -> SnapshotDiff:
     """Build a temporary tree for `project_root` and diff it against the snapshot.
 
     The resulting diff lists are returned to the caller. The snapshot ref is not
@@ -247,7 +247,7 @@ def detect_changes_preparation_step1(project_root: Path | str) -> SnapshotDiff:
     )
 
 
-def snapshot_prioritization_step2(project_root: Path | str) -> str:
+def snapshot_prioritization(project_root: Path | str) -> str:
     """Persist the tree produced during Step 1 into the snapshot repository."""
 
     root = Path(project_root).resolve()

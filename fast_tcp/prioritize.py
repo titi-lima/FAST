@@ -17,9 +17,9 @@ import xxhash
 from . import fast
 from . import snapshot_cache as _snapshot_cache
 from .snapshot_cache import (
-    detect_changes_preparation_step1,
+    detect_changes_preparation,
     load_file_from_snapshot,
-    snapshot_prioritization_step2,
+    snapshot_prioritization,
 )
 
 
@@ -290,7 +290,7 @@ def run_blackbox_file(
         if snapshot_root:
             _debug_print(debug, f"Detected snapshot root at {snapshot_root}")
             try:
-                snapshot_diff = detect_changes_preparation_step1(snapshot_root)
+                snapshot_diff = detect_changes_preparation(snapshot_root)
             except Exception as exc:
                 _debug_print(debug, f"Snapshot diff failed: {exc}")
                 _snapshot_cache.discard_pending_snapshot(snapshot_root)
@@ -494,7 +494,7 @@ def run_blackbox_file(
         if snapshot_root:
             if snapshot_should_persist:
                 try:
-                    snapshot_prioritization_step2(snapshot_root)
+                    snapshot_prioritization(snapshot_root)
                 except Exception as exc:
                     _debug_print(debug, f"Snapshot persistence failed: {exc}")
             elif snapshot_pending:
