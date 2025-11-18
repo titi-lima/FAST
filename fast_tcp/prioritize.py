@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
+import io
 import os
 import pickle
+import re
 import shutil
 import sys
 import time
-from typing import Iterable, List, Sequence, Set, Tuple
+from pathlib import Path
+from typing import Iterable, List, Optional, Sequence, Set, Tuple
 
 import xxhash
 
 from . import fast
+from . import snapshot_cache as _snapshot_cache
+from .snapshot_cache import (
+    detect_changes_preparation,
+    load_file_from_snapshot,
+    snapshot_prioritization,
+)
 
 
 usage = """USAGE: python py/prioritize.py <dataset> <entity> <algorithm> <repetitions>
@@ -36,6 +45,11 @@ ALLOWED_ALGOS = {
 }
 
 
+def _debug_print(enabled: bool, message: str) -> None:
+    if enabled:
+        print(f"[DEBUG] {message}")
+
+
 def _configure_fast(
     *,
     algo: str,
@@ -56,16 +70,136 @@ def _configure_fast(
     fast.SIGNATURE_FOLDER = signature_dir
 
 
+def _parse_test_suite_lines(lines: Iterable[str]) -> List[Tuple[str, str]]:
+    tests: List[Tuple[str, str]] = []
+    for idx, line in enumerate(lines, start=1):
+        content = line.rstrip("\r\n")
+        if not content:
+            continue
+        tests.append((str(idx), content))
+    return tests
+
+
+def _suite_cache_base(root: Path) -> Path:
+    return root / ".fast" / "cache" / "suites"
+
+
+def _suite_cache_path(root: Path, relative_path: Path) -> Path:
+    return _suite_cache_base(root) / relative_path
+
+
+def _load_cached_suite(root: Path, relative_path: Path) -> List[Tuple[str, str]] | None:
+    cache_file = _suite_cache_path(root, relative_path)
+    if not cache_file.exists():
+        return None
+    try:
+        with open(cache_file, "r", encoding="utf-8") as fh:
+            return _parse_test_suite_lines(fh)
+    except OSError:
+        return None
+
+
+def _store_cached_suite(
+    root: Path, relative_path: Path, suite: Sequence[Tuple[str, str]]
+) -> None:
+    cache_file = _suite_cache_path(root, relative_path)
+    try:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(cache_file, "w", encoding="utf-8") as fh:
+            for _, test in suite:
+                fh.write(test + "\n")
+    except OSError:
+        pass
+
+
+_TEST_FILE_EXTS = (
+    ".py",
+    ".pyw",
+    ".js",
+    ".cjs",
+    ".mjs",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".java",
+    ".kt",
+    ".go",
+    ".rb",
+    ".php",
+    ".rs",
+)
+
+
+def _extract_dependency_paths(command: str, project_root: Path) -> Set[Path]:
+    candidates: Set[Path] = set()
+
+    def _consider(token: str) -> None:
+        token = token.strip()
+        if not token:
+            return
+        if "[" in token and token.endswith("]"):
+            token = token[: token.index("[")]
+        token = token.replace("\\", "/")
+        if not any(token.endswith(ext) for ext in _TEST_FILE_EXTS):
+            if "/" not in token:
+                return
+        path = Path(token)
+        candidate = path if path.is_absolute() else (project_root / path)
+        try:
+            rel = candidate.resolve(strict=False).relative_to(project_root)
+        except ValueError:
+            return
+        candidates.add(rel)
+
+    segments = command.split()
+    if segments:
+        primary = segments[0]
+        if "::" in primary:
+            _consider(primary.split("::", 1)[0])
+        else:
+            _consider(primary)
+
+    for token in re.split(r"[,\s:]+", command.replace("::", " ")):
+        _consider(token)
+
+    return candidates
+
+
+def _filter_suite_by_changed_files(
+    suite: List[Tuple[str, str]],
+    changed_files: Set[str],
+    project_root: Path,
+    debug: bool,
+) -> Tuple[List[Tuple[str, str]], Set[str]]:
+    if not suite or not changed_files:
+        return suite, set()
+
+    changed_paths = {Path(path) for path in changed_files}
+    kept: List[Tuple[str, str]] = []
+    dropped_ids: Set[str] = set()
+
+    for test_id, command in suite:
+        deps = _extract_dependency_paths(command, project_root)
+        if any(dep in changed_paths for dep in deps):
+            dropped_ids.add(test_id)
+        else:
+            kept.append((test_id, command))
+
+    if debug and dropped_ids:
+        ordered = sorted(
+            dropped_ids,
+            key=int if all(t.isdigit() for t in dropped_ids) else str,
+        )
+        _debug_print(debug, "Invalidated cached tests: " + ", ".join(ordered))
+
+    return kept, dropped_ids
+
+
 def _load_test_suite(path: str) -> List[Tuple[str, str]]:
     """Load a plain-text test suite where each line is a test command."""
 
-    tests: List[Tuple[str, str]] = []
     with open(path, "r", encoding="utf-8") as fh:
-        for idx, line in enumerate(fh, start=1):
-            content = line.rstrip("\r\n")
-            if not content:
-                continue
-            tests.append((str(idx), content))
+        tests = _parse_test_suite_lines(fh)
     if not tests:
         raise ValueError(f"No tests found in {path}")
     return tests
@@ -101,6 +235,27 @@ def partition_test_suite(
     return new_tests, old_tests, del_tests
 
 
+def _resolve_project_root(
+    input_file: str, explicit_root: Optional[str]
+) -> Optional[Path]:
+    if explicit_root:
+        candidate = Path(explicit_root).expanduser().resolve()
+        if (candidate / ".fast").is_dir():
+            return candidate
+
+    env_root = os.environ.get("FAST_TCP_PROJECT_ROOT")
+    if env_root:
+        candidate = Path(env_root).expanduser().resolve()
+        if (candidate / ".fast").is_dir():
+            return candidate
+
+    path = Path(input_file).expanduser().resolve()
+    for candidate in (path.parent, *path.parents):
+        if (candidate / ".fast").is_dir():
+            return candidate
+    return None
+
+
 def run_blackbox_file(
     *,
     algo: str,
@@ -110,13 +265,143 @@ def run_blackbox_file(
     r: int,
     b: int,
     budget: int,
+    project_root: str | None = None,
     old_suite: Iterable[Tuple[str, str]] | None = None,
     debug: bool = False,
 ) -> Tuple[float, float, float, List[int]]:
     """Run one prioritization repetition and collect timing metrics."""
 
     new_suite = _load_test_suite(input_file)
-    old_suite = list(old_suite or [])
+
+    snapshot_root: Optional[Path] = None
+    snapshot_pending = False
+    snapshot_should_persist = False
+    previous_suite: List[Tuple[str, str]] = []
+    relative_input_path: Optional[Path] = None
+
+    if old_suite is not None:
+        previous_suite = list(old_suite)
+        _debug_print(
+            debug,
+            f"Using caller-provided previous suite ({len(previous_suite)} tests)",
+        )
+    else:
+        snapshot_root = _resolve_project_root(input_file, project_root)
+        if snapshot_root:
+            _debug_print(debug, f"Detected snapshot root at {snapshot_root}")
+            try:
+                snapshot_diff = detect_changes_preparation(snapshot_root)
+            except Exception as exc:
+                _debug_print(debug, f"Snapshot diff failed: {exc}")
+                _snapshot_cache.discard_pending_snapshot(snapshot_root)
+                snapshot_root = None
+            else:
+                _debug_print(
+                    debug,
+                    (
+                        "Snapshot diff resolved: "
+                        f"old_tree={snapshot_diff.old_tree or '<none>'} "
+                        f"new_tree={snapshot_diff.new_tree}"
+                    ),
+                )
+                _debug_print(
+                    debug,
+                    (
+                        "Filesystem changes: "
+                        f"+{len(snapshot_diff.added)} "
+                        f"~{len(snapshot_diff.modified)} "
+                        f"-{len(snapshot_diff.deleted)}"
+                    ),
+                )
+                if debug:
+                    for path in sorted(snapshot_diff.added):
+                        _debug_print(debug, f"  [ADDED] {path}")
+                    for path in sorted(snapshot_diff.modified):
+                        _debug_print(debug, f"  [MODIFIED] {path}")
+                    for path in sorted(snapshot_diff.deleted):
+                        _debug_print(debug, f"  [DELETED] {path}")
+                    if (
+                        not snapshot_diff.added
+                        and not snapshot_diff.modified
+                        and not snapshot_diff.deleted
+                    ):
+                        _debug_print(debug, "  (no tracked file changes)")
+
+                rel_path: Optional[Path] = None
+                try:
+                    rel_path = (
+                        Path(input_file)
+                        .expanduser()
+                        .resolve()
+                        .relative_to(snapshot_root)
+                    )
+                    relative_input_path = rel_path
+                except ValueError:
+                    rel_path = None
+
+                if rel_path is not None and snapshot_diff.old_tree:
+                    blob = load_file_from_snapshot(
+                        snapshot_root, rel_path.as_posix(), tree=snapshot_diff.old_tree
+                    )
+                    if blob is not None:
+                        try:
+                            previous_suite = _parse_test_suite_lines(
+                                io.StringIO(blob.decode("utf-8"))
+                            )
+                            _debug_print(
+                                debug,
+                                (
+                                    "Recovered previous test suite from snapshot "
+                                    f"({len(previous_suite)} tests)"
+                                ),
+                            )
+                        except UnicodeDecodeError as exc:
+                            _debug_print(
+                                debug,
+                                f"Failed to decode snapshot suite for {rel_path}: {exc}",
+                            )
+                    else:
+                        _debug_print(
+                            debug,
+                            "No previous snapshot available for input file; treating as new suite",
+                        )
+                if not previous_suite and rel_path is not None:
+                    cached_suite = _load_cached_suite(snapshot_root, rel_path)
+                    if cached_suite:
+                        previous_suite = cached_suite
+                        _debug_print(
+                            debug,
+                            (
+                                "Recovered previous test suite from cache "
+                                f"({len(previous_suite)} tests)"
+                            ),
+                        )
+                if previous_suite:
+                    changed_files = (
+                        snapshot_diff.added
+                        | snapshot_diff.modified
+                        | snapshot_diff.deleted
+                    )
+                    previous_suite, dropped_ids = _filter_suite_by_changed_files(
+                        previous_suite, changed_files, snapshot_root, debug
+                    )
+                    if debug and dropped_ids:
+                        for test_id in sorted(
+                            dropped_ids,
+                            key=int if all(t.isdigit() for t in dropped_ids) else str,
+                        ):
+                            _debug_print(
+                                debug,
+                                f"  -> Invalidated cached test {test_id} (dependency changed)",
+                            )
+                snapshot_pending = True
+        else:
+            _debug_print(
+                debug,
+                "Snapshot root could not be determined; running without cached suite",
+            )
+
+    old_suite = previous_suite
 
     if os.path.exists(signature_dir):
         shutil.rmtree(signature_dir)
@@ -131,25 +416,54 @@ def run_blackbox_file(
         signature_dir=signature_dir,
     )
 
-    if debug:
-        print(f"[DEBUG] Starting partition phase")
+    _debug_print(debug, "Starting partition phase")
 
     start_partition = time.perf_counter()
     new_tests, old_tests, del_tests = partition_test_suite(new_suite, old_suite)
     partition_time = time.perf_counter() - start_partition
     if debug:
-        print(f"[DEBUG]   Partition time: {partition_time:.4f}s")
+        _debug_print(
+            debug,
+            (
+                f"Partition summary: {len(new_tests)} new / "
+                f"{len(old_tests)} unchanged / {len(del_tests)} deleted"
+            ),
+        )
+        if new_tests:
+            _debug_print(
+                debug,
+                "  New tests: "
+                + ", ".join(
+                    sorted(
+                        new_tests,
+                        key=int if all(t.isdigit() for t in new_tests) else str,
+                    )
+                ),
+            )
+        if del_tests:
+            _debug_print(
+                debug,
+                "  Deleted tests: "
+                + ", ".join(
+                    sorted(
+                        del_tests,
+                        key=int if all(t.isdigit() for t in del_tests) else str,
+                    )
+                ),
+            )
+        if not new_tests and not del_tests:
+            _debug_print(debug, "  No test-level changes detected")
+        _debug_print(debug, f"  Partition time: {partition_time:.4f}s")
 
-    if debug:
-        print(f"[DEBUG] Starting preparation phase (k={k}, r={r}, b={b})")
+    _debug_print(debug, f"Starting preparation phase (k={k}, r={r}, b={b})")
 
     start_prep = time.perf_counter()
     fast.preparation(new_suite, del_tests)
     prep_time = time.perf_counter() - start_prep
 
     if debug:
-        print(f"[DEBUG]   Preparation time: {prep_time:.4f}s")
-        print(f"[DEBUG] Starting prioritization phase")
+        _debug_print(debug, f"  Preparation time: {prep_time:.4f}s")
+        _debug_print(debug, "Starting prioritization phase")
 
     start_prio = time.perf_counter()
     prioritized = fast.prioritization(
@@ -158,12 +472,39 @@ def run_blackbox_file(
     prio_time = time.perf_counter() - start_prio
 
     if debug:
-        print(f"[DEBUG]   Prioritization time: {prio_time:.4f}s")
+        _debug_print(debug, f"  Prioritization time: {prio_time:.4f}s")
+        if prioritized:
+            preview = ", ".join(prioritized[:10])
+            if len(prioritized) > 10:
+                preview += ", ..."
+            _debug_print(
+                debug,
+                f"  Prioritized order preview ({len(prioritized)} total): {preview}",
+            )
+        else:
+            _debug_print(debug, "  Prioritized order is empty")
 
     # The FAST module returns a list of IDs in priority order.
     prioritized_ids = [int(t_id) for t_id in prioritized]
 
-    return partition_time, prep_time, prio_time, prioritized_ids
+    try:
+        snapshot_should_persist = snapshot_pending
+        return partition_time, prep_time, prio_time, prioritized_ids
+    finally:
+        if snapshot_root:
+            if snapshot_should_persist:
+                try:
+                    snapshot_prioritization(snapshot_root)
+                except Exception as exc:
+                    _debug_print(debug, f"Snapshot persistence failed: {exc}")
+            elif snapshot_pending:
+                _snapshot_cache.discard_pending_snapshot(snapshot_root)
+            if relative_input_path is not None:
+                _store_cached_suite(snapshot_root, relative_input_path, new_suite)
+                _debug_print(
+                    debug,
+                    f"Stored current test suite in cache for {relative_input_path.as_posix()}",
+                )
 
 
 def bbox_prioritization(
@@ -177,6 +518,7 @@ def bbox_prioritization(
     b: int,
     repeats: int,
     budget: int,
+    project_root: str,
     debug: bool = False,
 ) -> None:
     """Prioritize the specified dataset.
@@ -228,6 +570,7 @@ def bbox_prioritization(
     for run in range(repeats):
         sig_dir = os.path.join(signature_base, f"run_{run + 1}")
         print(f"  Repetition {run + 1}/{repeats}")
+        print(f"  Project root: {project_root}")
         partition_time, prep_time, prio_time, prioritized = run_blackbox_file(
             algo=name,
             input_file=input_file,
@@ -237,6 +580,7 @@ def bbox_prioritization(
             b=b,
             budget=budget,
             debug=debug,
+            project_root=project_root,
         )
         partition_times.append(partition_time)
         prep_times.append(prep_time)
@@ -324,12 +668,12 @@ def main() -> None:
 
     # Check for debug mode via environment variable
     debug = os.environ.get("FAST_TCP_DEBUG", "").lower() in ("1", "true", "yes")
-
     bbox_prioritization(
         algname,
         prog,
         version,
         entity,
+        project_root=Path(sys.argv[1]).parent.as_posix(),
         k=k,
         r=r,
         b=b,

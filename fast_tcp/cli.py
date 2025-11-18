@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import List
 
 from . import prioritize
+from .snapshot_cache import initialize_snapshot_cache
 
 
 def create_parser():
@@ -177,6 +178,8 @@ def _init_ant(project_dir: Path, algo: str, repetitions: int) -> int:
     macros_dst.parent.mkdir(parents=True, exist_ok=True)
     macros_dst.write_text(macros_src.read_text(encoding="utf-8"), encoding="utf-8")
 
+    initialize_snapshot_cache(project_dir)
+
     # Ensure import present near top
     if "fast-tcp.xml" not in updated:
         lines = updated.splitlines()
@@ -328,6 +331,7 @@ def _init_pytest(
                 "Pytest plugin is auto-discovered; run pytest with --fast-tcp to enable."
             )
 
+    initialize_snapshot_cache(project_dir)
     print("Done. Run: pytest")
     return 0
 
@@ -383,6 +387,7 @@ def _init_vitest(
         else:
             print("No package.json found; skipped scripts update.")
 
+    initialize_snapshot_cache(project_dir)
     print("Done. Run: npm run test:fast")
     return 0
 
@@ -429,6 +434,7 @@ def _init_gotest(project_dir: Path, *, algo: str, repetitions: int) -> int:
     if usage_src.exists():
         usage_dst.write_text(usage_src.read_text(encoding="utf-8"), encoding="utf-8")
 
+    initialize_snapshot_cache(project_dir)
     print("Done. Run: bash .fast/tools/gotest/run-fast.sh")
     return 0
 
@@ -606,94 +612,93 @@ def run_prioritization(args):
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Create a temporary directory structure that mimics the expected input format
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        temp_path = Path(args.test_dir) / ".fast"
 
-            # Create input directory structure
-            temp_input_dir = temp_path / "input"
-            temp_output_dir = temp_path / "output"
-            temp_input_dir.mkdir(parents=True, exist_ok=True)
-            temp_output_dir.mkdir(parents=True, exist_ok=True)
+        # Create input directory structure
+        temp_input_dir = temp_path / "input"
+        temp_output_dir = temp_path / "output"
+        temp_input_dir.mkdir(parents=True, exist_ok=True)
+        temp_output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Copy discovered file to expected location
-            entity_file = discovered_files[args.entity]
-            # Create a custom dataset name based on the directory
-            dir_name = Path(args.test_dir).name
-            synthetic_dataset = f"{dir_name}_v1"
-            dataset_dir = temp_input_dir / synthetic_dataset
-            dataset_dir.mkdir(parents=True, exist_ok=True)
+        # Copy discovered file to expected location
+        entity_file = discovered_files[args.entity]
+        # Create a custom dataset name based on the directory
+        dir_name = Path(args.test_dir).name
+        synthetic_dataset = f"{dir_name}_v1"
+        dataset_dir = temp_input_dir / synthetic_dataset
+        dataset_dir.mkdir(parents=True, exist_ok=True)
 
-            # Copy the file with the expected naming convention
-            target_file = dataset_dir / f"{dir_name}-{args.entity}.txt"
+        # Copy the file with the expected naming convention
+        target_file = dataset_dir / f"{dir_name}-{args.entity}.txt"
+
+        if args.debug:
+            setup_start = time.perf_counter()
+
+        shutil.copy2(entity_file, target_file)
+
+        if args.debug:
+            setup_time = time.perf_counter() - setup_start
+            print(f"[DEBUG] File setup time: {setup_time:.4f}s")
+
+        # Change to temporary directory to run prioritization
+        original_cwd = os.getcwd()
+        os.chdir(temp_path)
+
+        try:
+            # Mock sys.argv for the prioritize module
+            sys.argv = [
+                "prioritize.py",
+                synthetic_dataset,
+                args.entity,
+                args.algo,
+                str(args.repetitions),
+            ]
+
+            # Set debug environment variable if enabled
+            if args.debug:
+                os.environ["FAST_TCP_DEBUG"] = "1"
+
+            print(
+                f"Running {args.algo} prioritization on {args.entity} with {args.repetitions} repetition(s)..."
+            )
 
             if args.debug:
-                setup_start = time.perf_counter()
+                prio_start = time.perf_counter()
 
-            shutil.copy2(entity_file, target_file)
+            # Import and run the prioritize functionality
+            # Call the main function from prioritize module
+            prioritize.main()
 
             if args.debug:
-                setup_time = time.perf_counter() - setup_start
-                print(f"[DEBUG] File setup time: {setup_time:.4f}s")
+                prio_time = time.perf_counter() - prio_start
+                print(f"[DEBUG] Prioritization execution time: {prio_time:.4f}s")
 
-            # Change to temporary directory to run prioritization
-            original_cwd = os.getcwd()
-            os.chdir(temp_path)
-
-            try:
-                # Mock sys.argv for the prioritize module
-                sys.argv = [
-                    "prioritize.py",
-                    synthetic_dataset,
-                    args.entity,
-                    args.algo,
-                    str(args.repetitions),
-                ]
-
-                # Set debug environment variable if enabled
+            # Copy results back to the desired output directory
+            prioritized_dir = temp_output_dir / synthetic_dataset / "prioritized"
+            if prioritized_dir.exists():
                 if args.debug:
-                    os.environ["FAST_TCP_DEBUG"] = "1"
+                    copy_start = time.perf_counter()
 
-                print(
-                    f"Running {args.algo} prioritization on {args.entity} with {args.repetitions} repetition(s)..."
-                )
+                final_output_dir = output_dir / synthetic_dataset
+                if final_output_dir.exists():
+                    shutil.rmtree(final_output_dir)
+                shutil.copytree(prioritized_dir, final_output_dir)
 
                 if args.debug:
-                    prio_start = time.perf_counter()
+                    copy_time = time.perf_counter() - copy_start
+                    print(f"[DEBUG] Results copy time: {copy_time:.4f}s")
 
-                # Import and run the prioritize functionality
-                # Call the main function from prioritize module
-                prioritize.main()
+                print(f"Results saved to: {final_output_dir}")
+            else:
+                print("Warning: No prioritized results found")
 
-                if args.debug:
-                    prio_time = time.perf_counter() - prio_start
-                    print(f"[DEBUG] Prioritization execution time: {prio_time:.4f}s")
-
-                # Copy results back to the desired output directory
-                prioritized_dir = temp_output_dir / synthetic_dataset / "prioritized"
-                if prioritized_dir.exists():
-                    if args.debug:
-                        copy_start = time.perf_counter()
-
-                    final_output_dir = output_dir / synthetic_dataset
-                    if final_output_dir.exists():
-                        shutil.rmtree(final_output_dir)
-                    shutil.copytree(prioritized_dir, final_output_dir)
-
-                    if args.debug:
-                        copy_time = time.perf_counter() - copy_start
-                        print(f"[DEBUG] Results copy time: {copy_time:.4f}s")
-
-                    print(f"Results saved to: {final_output_dir}")
-                else:
-                    print("Warning: No prioritized results found")
-
-            except SystemExit:
-                # Handle sys.exit() calls in the original module
-                pass
-            finally:
-                os.chdir(original_cwd)
-                # Clean up debug environment variable
-                os.environ.pop("FAST_TCP_DEBUG", None)
+        except SystemExit:
+            # Handle sys.exit() calls in the original module
+            pass
+        finally:
+            os.chdir(original_cwd)
+            # Clean up debug environment variable
+            os.environ.pop("FAST_TCP_DEBUG", None)
 
         if args.debug:
             total_time = time.perf_counter() - overall_start

@@ -58,8 +58,7 @@
         <and>
             <available file="${junit.console}"/>
         </and>
-    </condition>
-    <!-- FAST TCP initialization target -->
+    </condition><!-- FAST TCP initialization target -->
     <target name="fast-tcp">
         <fast-tcp-prioritize-and-run projectDir="${basedir}" algo="FAST-pw" repetitions="3"/>
     </target>

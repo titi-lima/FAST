@@ -50,6 +50,7 @@ def _run_fast_blackbox(
         r=r,
         b=b,
         budget=budget,
+        project_root=input_file.parent.as_posix(),
         debug=debug,
     )
     return partition_time, prep_time, prio_time, order
@@ -110,12 +111,10 @@ def pytest_collection_modifyitems(
 
     overall_start = time.perf_counter() if debug else None
 
-    with tempfile.TemporaryDirectory() as td:
-        tmp_dir = Path(td)
-        input_file = _write_blackbox_input(nodeids, tmp_dir)
-        partition_time, prep_time, prio_time, order = _run_fast_blackbox(
-            input_file=input_file, algo=algo, r=r, b=b, k=k, budget=budget, debug=debug
-        )
+    input_file = _write_blackbox_input(nodeids, Path(session.config.rootdir) / ".fast")
+    partition_time, prep_time, prio_time, order = _run_fast_blackbox(
+        input_file=input_file, algo=algo, r=r, b=b, k=k, budget=budget, debug=debug
+    )
 
     if debug:
         total_time = (time.perf_counter() - overall_start) if overall_start else 0
