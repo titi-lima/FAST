@@ -403,8 +403,7 @@ def run_blackbox_file(
 
     old_suite = previous_suite
 
-    if os.path.exists(signature_dir):
-        shutil.rmtree(signature_dir)
+    # Ensure signature directory exists (don't delete - we want to cache!)
     os.makedirs(signature_dir, exist_ok=True)
 
     _configure_fast(

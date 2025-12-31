@@ -54,8 +54,14 @@ assert DEFAULT_BUDGET >= 0, "budget must be non-negative"
 # SIGNATURES
 
 # In-memory cache for signatures to avoid repeated disk I/O
-_SIGNATURE_CACHE: Dict[str, MinHash] = {}
+# Format: {test_id: (content_hash, MinHash)}
+_SIGNATURE_CACHE: Dict[str, Tuple[int, MinHash]] = {}
 _SIGNATURE_CACHE_PATH: str = ""
+
+
+def _content_hash(content: str) -> int:
+    """Compute a fast hash of test content for change detection."""
+    return xxhash.xxh64_intdigest(content.encode("utf-8"))
 
 
 def k_shingles(document: str) -> Set[str]:
@@ -102,8 +108,11 @@ def _get_consolidated_signature_path() -> str:
     return os.path.join(SIGNATURE_FOLDER, "signatures.pkl")
 
 
-def _load_signature_cache() -> Dict[str, MinHash]:
-    """Load the consolidated signature cache from disk."""
+def _load_signature_cache() -> Dict[str, Tuple[int, MinHash]]:
+    """Load the consolidated signature cache from disk.
+    
+    Returns dict mapping test_id -> (content_hash, MinHash).
+    """
     global _SIGNATURE_CACHE, _SIGNATURE_CACHE_PATH
     
     consolidated_path = _get_consolidated_signature_path()
@@ -126,7 +135,7 @@ def _load_signature_cache() -> Dict[str, MinHash]:
     return _SIGNATURE_CACHE
 
 
-def _save_signature_cache(signatures: Dict[str, MinHash]) -> None:
+def _save_signature_cache(signatures: Dict[str, Tuple[int, MinHash]]) -> None:
     """Save the consolidated signature cache to disk."""
     global _SIGNATURE_CACHE, _SIGNATURE_CACHE_PATH
     
@@ -158,7 +167,8 @@ def load_signatures(new_test_suite: List[Tuple[str, str]]) -> Dict[str, MinHash]
     signatures = {}
     for t_id, _ in new_test_suite:
         if t_id in cache:
-            signatures[t_id] = cache[t_id]
+            # Extract just the MinHash from (content_hash, MinHash) tuple
+            signatures[t_id] = cache[t_id][1]
 
     return signatures
 
@@ -174,7 +184,7 @@ def preparation(test_suite: List[Tuple[str, str]], del_tests: Set[str]) -> None:
 
     Actions:
     - Remove persisted signatures for tests deleted from the suite.
-    - Generate and store signatures for tests that do not yet have persisted files.
+    - Generate and store signatures for new tests or tests whose content changed.
 
     Parameters:
     - test_suite: iterable of (t_id, test_content).
@@ -193,11 +203,20 @@ def preparation(test_suite: List[Tuple[str, str]], del_tests: Set[str]) -> None:
             del cache[t_id]
             modified = True
 
-    # Generate signatures if they do not exist yet
+    # Generate signatures for new tests or tests whose content changed
     for t_id, t in test_suite:
+        current_hash = _content_hash(t)
         if t_id not in cache:
-            cache[t_id] = generate_signature(t)
+            # New test - generate signature
+            cache[t_id] = (current_hash, generate_signature(t))
             modified = True
+        else:
+            # Existing test - check if content changed
+            cached_hash, _ = cache[t_id]
+            if cached_hash != current_hash:
+                # Content changed - regenerate signature
+                cache[t_id] = (current_hash, generate_signature(t))
+                modified = True
 
     # Save consolidated cache if anything changed
     if modified:
