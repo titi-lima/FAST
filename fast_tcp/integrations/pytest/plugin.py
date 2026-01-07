@@ -22,6 +22,7 @@ from ...prioritize import run_blackbox_file
 
 
 def _write_blackbox_input(nodeids: List[str], tmp_dir: Path) -> Path:
+    tmp_dir.mkdir(parents=True, exist_ok=True)
     input_file = tmp_dir / "suite-bbox.txt"
     with open(input_file, "w", encoding="utf-8") as f:
         for nodeid in nodeids:
