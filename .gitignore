@@ -30,3 +30,4 @@ PACKAGE_SETUP_SUMMARY.md
 node_modules/
 .*
 !.gitignore
+*_playground/

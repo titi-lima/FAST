@@ -22,6 +22,7 @@ from ...prioritize import run_blackbox_file
 
 
 def _write_blackbox_input(nodeids: List[str], tmp_dir: Path) -> Path:
+    tmp_dir.mkdir(parents=True, exist_ok=True)
     input_file = tmp_dir / "suite-bbox.txt"
     with open(input_file, "w", encoding="utf-8") as f:
         for nodeid in nodeids:
@@ -97,7 +98,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_collection_modifyitems(
     session: pytest.Session, config: pytest.Config, items: List[pytest.Item]
 ) -> None:
-    if not items or not config.getoption("--fast-tcp"):
+    if not items:
+        return
+
+    try:
+        enabled = config.getoption("--fast-tcp")
+    except ValueError:
+        # Some environments register the plugin after argument parsing, so the
+        # FAST-specific options are unavailable for that run.
+        return
+
+    if not enabled:
         return
 
     algo = config.getoption("--fast-tcp-algo")

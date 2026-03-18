@@ -1,0 +1,16 @@
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'linear', 'nodeSpacing': 26, 'rankSpacing': 30}, 'themeVariables': {'fontSize': '12px', 'lineColor': '#4B5563', 'primaryTextColor': '#0F172A', 'fontFamily': 'Arial'}}}%%
+flowchart TB
+    P["Framework Plugins<br/>pytest | Vitest | Go | JUnit"]
+    C["Snapshot Cache<br/>.fast/snapshot.git<br/>Git tree snapshots + diff"]
+    E["FAST Engine<br/>MinHash -> LSH -> candidates"]
+
+    P -->|Test IDs| C -->|Changed tests| E
+    E -->|Prioritized order| P
+
+    classDef plugin fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1.2px,color:#0F172A
+    classDef cache fill:#DCFCE7,stroke:#15803D,stroke-width:1.2px,color:#0F172A
+    classDef engine fill:#FFE4C7,stroke:#C2410C,stroke-width:1.2px,color:#0F172A
+
+    class P plugin
+    class C cache
+    class E engine

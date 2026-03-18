@@ -42,12 +42,11 @@ You can also skip package.json modification:
 fast-tcp init vitest --no-scripts
 ```
 
-The runner lives at `fast-tcp/vitest/run-fast.sh`. Edit if you need to pass Vitest flags or batch by file.
+The runner lives at `.fast/tools/vitest/run-fast.cjs`. Edit it if you need to pass Vitest flags or batch by file.
 
 ### Requirements
 
 - Python 3.9+
 - Node 18+
 - `fast-tcp` installed in your Python environment
-
 

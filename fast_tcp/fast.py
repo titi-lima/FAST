@@ -53,6 +53,16 @@ assert DEFAULT_BUDGET >= 0, "budget must be non-negative"
 ###############################################################################
 # SIGNATURES
 
+# In-memory cache for signatures to avoid repeated disk I/O
+# Format: {test_id: (content_hash, MinHash)}
+_SIGNATURE_CACHE: Dict[str, Tuple[int, MinHash]] = {}
+_SIGNATURE_CACHE_PATH: str = ""
+
+
+def _content_hash(content: str) -> int:
+    """Compute a fast hash of test content for change detection."""
+    return xxhash.xxh64_intdigest(content.encode("utf-8"))
+
 
 def k_shingles(document: str) -> Set[str]:
     """
@@ -93,35 +103,58 @@ def generate_signature(document: str) -> MinHash:
     return m
 
 
-def write_signature(obj: MinHash, path: str) -> None:
+def _get_consolidated_signature_path() -> str:
+    """Get the path to the consolidated signature file."""
+    return os.path.join(SIGNATURE_FOLDER, "signatures.pkl")
+
+
+def _load_signature_cache() -> Dict[str, Tuple[int, MinHash]]:
+    """Load the consolidated signature cache from disk.
+    
+    Returns dict mapping test_id -> (content_hash, MinHash).
     """
-    Serialize `obj` to `path` using pickle in binary mode.
+    global _SIGNATURE_CACHE, _SIGNATURE_CACHE_PATH
+    
+    consolidated_path = _get_consolidated_signature_path()
+    
+    # Return cached data if already loaded for this path
+    if _SIGNATURE_CACHE_PATH == consolidated_path and _SIGNATURE_CACHE:
+        return _SIGNATURE_CACHE
+    
+    _SIGNATURE_CACHE_PATH = consolidated_path
+    
+    if os.path.exists(consolidated_path):
+        try:
+            with open(consolidated_path, "rb") as f:
+                _SIGNATURE_CACHE = pickle.load(f)
+        except (pickle.PickleError, OSError, EOFError):
+            _SIGNATURE_CACHE = {}
+    else:
+        _SIGNATURE_CACHE = {}
+    
+    return _SIGNATURE_CACHE
 
-    Parameters
-    - obj: Any picklable Python object (e.g., a MinHash instance).
-    - path: Filesystem path where the pickle will be written.
-    """
-    with open(path, "wb") as f:
-        pickle.dump(obj, f)
 
-
-def read_signature(path: str) -> MinHash:
-    """
-    Deserialize and return a pickled object from `path`.
-
-    Parameters
-    - path: Filesystem path to a pickle file.
-
-    Returns
-    - The deserialized Python object.
-    """
-    with open(path, "rb") as f:
-        return pickle.load(f)
+def _save_signature_cache(signatures: Dict[str, Tuple[int, MinHash]]) -> None:
+    """Save the consolidated signature cache to disk."""
+    global _SIGNATURE_CACHE, _SIGNATURE_CACHE_PATH
+    
+    consolidated_path = _get_consolidated_signature_path()
+    os.makedirs(SIGNATURE_FOLDER, exist_ok=True)
+    
+    with open(consolidated_path, "wb") as f:
+        pickle.dump(signatures, f)
+    
+    _SIGNATURE_CACHE = signatures
+    _SIGNATURE_CACHE_PATH = consolidated_path
 
 
 def load_signatures(new_test_suite: List[Tuple[str, str]]) -> Dict[str, MinHash]:
     """
-    Load persisted (pickle serialization) MinHash signatures for tests in the new test suite.
+    Load persisted MinHash signatures for tests in the new test suite.
+
+    Uses a consolidated pickle file for all signatures instead of individual
+    files per test, reducing I/O overhead from O(n) to O(1).
 
     Parameters:
     - new_test_suite: iterable of (t_id, test_content).
@@ -129,12 +162,13 @@ def load_signatures(new_test_suite: List[Tuple[str, str]]) -> Dict[str, MinHash]
     Returns:
     - signatures: dict mapping t_id -> MinHash signature object.
     """
-    path = SIGNATURE_FOLDER
+    cache = _load_signature_cache()
 
     signatures = {}
     for t_id, _ in new_test_suite:
-        sig = read_signature(os.path.join(path, f"{t_id}.pkl"))
-        signatures[t_id] = sig
+        if t_id in cache:
+            # Extract just the MinHash from (content_hash, MinHash) tuple
+            signatures[t_id] = cache[t_id][1]
 
     return signatures
 
@@ -150,25 +184,43 @@ def preparation(test_suite: List[Tuple[str, str]], del_tests: Set[str]) -> None:
 
     Actions:
     - Remove persisted signatures for tests deleted from the suite.
-    - Generate and store signatures for tests that do not yet have persisted files.
+    - Generate and store signatures for new tests or tests whose content changed.
 
     Parameters:
     - test_suite: iterable of (t_id, test_content).
     - del_tests: set of t_id representing tests deleted from the previous suite.
+
+    Uses a single consolidated pickle file for all signatures instead of
+    individual files per test, reducing I/O overhead from O(n) to O(1).
     """
-    path = SIGNATURE_FOLDER
-    os.makedirs(path, exist_ok=True)
+    # Load existing signature cache
+    cache = _load_signature_cache()
+    modified = False
 
     # Remove signatures for deleted tests
     for t_id in del_tests:
-        if os.path.exists(os.path.join(path, f"{t_id}.pkl")):
-            os.remove(os.path.join(path, f"{t_id}.pkl"))
+        if t_id in cache:
+            del cache[t_id]
+            modified = True
 
-    # Generate signatures if they do not exist yet
+    # Generate signatures for new tests or tests whose content changed
     for t_id, t in test_suite:
-        if not os.path.exists(os.path.join(path, f"{t_id}.pkl")):
-            sig = generate_signature(t)
-            write_signature(sig, os.path.join(path, f"{t_id}.pkl"))
+        current_hash = _content_hash(t)
+        if t_id not in cache:
+            # New test - generate signature
+            cache[t_id] = (current_hash, generate_signature(t))
+            modified = True
+        else:
+            # Existing test - check if content changed
+            cached_hash, _ = cache[t_id]
+            if cached_hash != current_hash:
+                # Content changed - regenerate signature
+                cache[t_id] = (current_hash, generate_signature(t))
+                modified = True
+
+    # Save consolidated cache if anything changed
+    if modified:
+        _save_signature_cache(cache)
 
 
 ###############################################################################

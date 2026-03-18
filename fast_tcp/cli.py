@@ -20,14 +20,15 @@ from .snapshot_cache import initialize_snapshot_cache
 def create_parser():
     """Create the main argument parser."""
     parser = argparse.ArgumentParser(
+        prog="fast-tcp",
         description="Test Case Prioritization Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  tcp-prioritize --test-dir /path/to/tests --algo FAST-pw --entity bbox
-  tcp-prioritize --test-dir ./my_tests --algo FAST-pw --entity function --repetitions 10
-  tcp-prioritize --test-dir /tests --algo STR --entity bbox --output-dir ./results
-  tcp-prioritize --test-dir /tests --algo FAST-pw --entity bbox --debug
+  fast-tcp --test-dir /path/to/suites --algo FAST-pw --entity bbox
+  fast-tcp --test-dir .fast/in --algo FAST-log --entity bbox --file-naming entity-suffix
+  fast-tcp --test-dir /tests --algo FAST-pw --entity bbox --output-dir ./results
+  fast-tcp --test-dir /tests --algo FAST-pw --entity bbox --debug
         """,
     )
 
@@ -53,7 +54,7 @@ Examples:
         "--entity",
         required=True,
         choices=["bbox"],
-        help="BB prioritization",
+        help="Black-box prioritization over plain-text suites",
     )
     parser.add_argument(
         "--repetitions",

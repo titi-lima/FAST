@@ -17,7 +17,7 @@ import stat
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 try:
     from . import __version__ as _FAST_TCP_VERSION
@@ -79,9 +79,16 @@ class SnapshotDiff:
 class _PendingSnapshot:
     tree: str
     ignore_hash: str
+    mtime_hash: str
 
 
 _PENDING_TREES: Dict[Path, _PendingSnapshot] = {}
+
+
+# Cache for mtime hash to avoid recomputation within same run
+_MTIME_HASH_CACHE: Dict[Path, Tuple[str, float]] = (
+    {}
+)  # path -> (hash, computation_time)
 
 
 class _GitIgnoreHelper:
@@ -208,6 +215,37 @@ def detect_changes_preparation(project_root: Path | str) -> SnapshotDiff:
     root = Path(project_root).resolve()
     initialize_snapshot_cache(root)
 
+    # Compute current mtime hash for short-circuit check
+    current_mtime_hash = _compute_mtime_hash(root)
+    current_ignore_hash = _compute_ignore_hash()
+
+    # Check if we can short-circuit (no changes since last snapshot)
+    manifest = _read_latest_manifest(root)
+    env = _snapshot_env(root, None)
+    old_tree = _resolve_latest_tree(root, env)
+
+    if (
+        manifest
+        and old_tree is not None
+        and manifest.get("mtime_hash") == current_mtime_hash
+        and manifest.get("ignore_hash") == current_ignore_hash
+    ):
+        # No files have changed - reuse previous snapshot
+        pending = _PendingSnapshot(
+            tree=old_tree,
+            ignore_hash=current_ignore_hash,
+            mtime_hash=current_mtime_hash,
+        )
+        _PENDING_TREES[root] = pending
+        return SnapshotDiff(
+            added=set(),
+            modified=set(),
+            deleted=set(),
+            new_tree=old_tree,
+            old_tree=old_tree,
+        )
+
+    # Files have changed - need to build new tree
     index_path = _select_index_path(root)
     env = _snapshot_env(root, index_path)
 
@@ -217,13 +255,15 @@ def detect_changes_preparation(project_root: Path | str) -> SnapshotDiff:
     finally:
         _cleanup_index(index_path)
 
-    pending = _PendingSnapshot(tree=new_tree, ignore_hash=_compute_ignore_hash())
+    pending = _PendingSnapshot(
+        tree=new_tree,
+        ignore_hash=current_ignore_hash,
+        mtime_hash=current_mtime_hash,
+    )
     _PENDING_TREES[root] = pending
 
-    old_tree = _resolve_latest_tree(root, env)
-
-    manifest = _read_latest_manifest(root)
-    if manifest and manifest.get("ignore_hash") != pending.ignore_hash:
+    # Invalidate ignore hash if it changed
+    if manifest and manifest.get("ignore_hash") != current_ignore_hash:
         old_tree = None
 
     if old_tree is None:
@@ -231,10 +271,11 @@ def detect_changes_preparation(project_root: Path | str) -> SnapshotDiff:
         modified: Set[str] = set()
         deleted: Set[str] = set()
     else:
+        env_for_diff = _snapshot_env(root, None)
         diff_proc = _run_git(
             ["diff-tree", "--no-commit-id", "--name-status", "-r", old_tree, new_tree],
             cwd=root,
-            env=env,
+            env=env_for_diff,
             check=True,
         )
         added, modified, deleted = _parse_diff_output(diff_proc.stdout.decode("utf-8"))
@@ -262,11 +303,13 @@ def snapshot_prioritization(project_root: Path | str) -> str:
         try:
             tree = _build_tree(root, env, tracked_files=None)
             ignore_hash = _compute_ignore_hash()
+            mtime_hash = _compute_mtime_hash(root)
         finally:
             _cleanup_index(index_path)
     else:
         tree = pending.tree
         ignore_hash = pending.ignore_hash
+        mtime_hash = pending.mtime_hash
         env = write_env
 
     previous_tree = _resolve_latest_tree(root, write_env)
@@ -275,7 +318,10 @@ def snapshot_prioritization(project_root: Path | str) -> str:
     if tree_changed:
         _update_snapshot_ref(root, write_env, tree)
 
-    _write_manifest(root, tree, ignore_hash)
+    _write_manifest(root, tree, ignore_hash, mtime_hash)
+
+    # Clear mtime cache after snapshot is persisted
+    _clear_mtime_cache(root)
 
     if tree_changed:
         _prune_snapshot_objects(root, write_env)
@@ -349,6 +395,65 @@ def _compute_ignore_hash() -> str:
     return digest
 
 
+def _compute_mtime_hash(root: Path) -> str:
+    """Compute a hash of all tracked file paths and their mtimes.
+
+    This is used as a fast short-circuit check: if the mtime hash hasn't changed
+    since the last snapshot, we can skip all git operations and reuse the
+    previous snapshot tree.
+
+    The hash includes:
+    - File paths (sorted for determinism)
+    - File mtimes (nanosecond precision where available)
+    - File sizes (to catch edge cases where mtime doesn't change)
+    """
+    # Check cache first (valid for current process only)
+    cached = _MTIME_HASH_CACHE.get(root)
+    if cached is not None:
+        return cached[0]
+
+    hasher = hashlib.sha256()
+    file_data: List[Tuple[str, int, int]] = []  # (path, mtime_ns, size)
+
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        current = Path(dirpath)
+
+        # Filter directories (same logic as _collect_files)
+        filtered_dirnames: List[str] = []
+        for d in dirnames:
+            dir_path = current / d
+            if not _should_ignore_path(dir_path):
+                filtered_dirnames.append(d)
+        dirnames[:] = filtered_dirnames
+
+        for name in filenames:
+            path = current / name
+            if _should_ignore_path(path):
+                continue
+
+            rel_path = path.relative_to(root).as_posix()
+            try:
+                st = path.lstat()  # lstat to handle symlinks correctly
+                file_data.append((rel_path, st.st_mtime_ns, st.st_size))
+            except OSError:
+                continue
+
+    # Sort for deterministic hash
+    file_data.sort(key=lambda x: x[0])
+
+    for rel_path, mtime_ns, size in file_data:
+        hasher.update(f"{rel_path}:{mtime_ns}:{size}\n".encode("utf-8"))
+
+    result = hasher.hexdigest()
+    _MTIME_HASH_CACHE[root] = (result, 0.0)
+    return result
+
+
+def _clear_mtime_cache(root: Path) -> None:
+    """Clear the mtime hash cache for a project root."""
+    _MTIME_HASH_CACHE.pop(root, None)
+
+
 def _resolve_latest_tree(root: Path, env: Dict[str, str]) -> Optional[str]:
     proc = _run_git(
         ["rev-parse", "--verify", "refs/snapshots/latest"],
@@ -375,22 +480,78 @@ def _build_tree(
     env: Dict[str, str],
     tracked_files: Optional[List[str]],
 ) -> str:
-    for rel_path, mode, sha in _iter_files(root, env):
+    """Build a git tree from the current working directory.
+
+    This optimized version batches git operations to minimize subprocess calls:
+    - Uses `git hash-object -w --stdin-paths` to hash all regular files in one call
+    - Uses `git update-index --index-info` to update the index in one call
+    """
+    # Collect all files first
+    file_entries = _collect_files(root, env)
+
+    if not file_entries:
+        # Empty tree
+        proc = _run_git(["write-tree"], cwd=root, env=env, check=True)
+        return proc.stdout.decode("utf-8").strip()
+
+    # Separate regular files from symlinks (symlinks need special handling)
+    regular_files: List[Tuple[str, str]] = []  # (rel_path, mode)
+    symlink_entries: List[Tuple[str, str, str]] = []  # (rel_path, mode, sha)
+
+    for rel_path, mode, is_symlink, symlink_target in file_entries:
         if tracked_files is not None:
             tracked_files.append(rel_path)
-        _run_git(
-            ["update-index", "--add", "--cacheinfo", f"{mode},{sha},{rel_path}"],
-            cwd=root,
-            env=env,
-            check=True,
-        )
+        if is_symlink:
+            # Hash symlink targets individually (they're usually few)
+            proc = _run_git(
+                ["hash-object", "-w", "--stdin"],
+                cwd=root,
+                env=env,
+                input=symlink_target.encode("utf-8") if symlink_target else b"",
+                check=True,
+            )
+            sha = proc.stdout.decode("utf-8").strip()
+            symlink_entries.append((rel_path, mode, sha))
+        else:
+            regular_files.append((rel_path, mode))
+
+    # Batch hash all regular files in one call
+    file_shas: Dict[str, str] = {}
+    if regular_files:
+        file_paths = [rel_path for rel_path, _ in regular_files]
+        file_shas = _batch_hash_files(root, env, file_paths)
+
+    # Build index entries for batch update
+    index_entries: List[str] = []
+
+    # Add regular files
+    for rel_path, mode in regular_files:
+        sha = file_shas.get(rel_path)
+        if sha:
+            index_entries.append(f"{mode} {sha}\t{rel_path}")
+
+    # Add symlinks
+    for rel_path, mode, sha in symlink_entries:
+        index_entries.append(f"{mode} {sha}\t{rel_path}")
+
+    # Batch update index in one call
+    if index_entries:
+        _batch_update_index(root, env, index_entries)
 
     proc = _run_git(["write-tree"], cwd=root, env=env, check=True)
     return proc.stdout.decode("utf-8").strip()
 
 
-def _iter_files(root: Path, env: Dict[str, str]) -> Iterator[Tuple[str, str, str]]:
+def _collect_files(
+    root: Path, env: Dict[str, str]
+) -> List[Tuple[str, str, bool, Optional[str]]]:
+    """Collect all files to be tracked.
+
+    Returns list of (rel_path, mode, is_symlink, symlink_target).
+    """
     gitignore = _GitIgnoreHelper(root)
+    results: List[Tuple[str, str, bool, Optional[str]]] = []
+
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
         current = Path(dirpath)
         filtered_dirnames: List[str] = []
@@ -413,29 +574,72 @@ def _iter_files(root: Path, env: Dict[str, str]) -> Iterator[Tuple[str, str, str
             rel_path = path.relative_to(root).as_posix()
             if path.is_symlink():
                 target = os.readlink(path)
-                proc = _run_git(
-                    ["hash-object", "-w", "--stdin"],
-                    cwd=root,
-                    env=env,
-                    input=target.encode("utf-8"),
-                    check=True,
-                )
-                sha = proc.stdout.decode("utf-8").strip()
-                mode = "120000"
+                results.append((rel_path, "120000", True, target))
             else:
-                proc = _run_git(
-                    ["hash-object", "-w", "--", rel_path],
-                    cwd=root,
-                    env=env,
-                    check=True,
-                )
-                sha = proc.stdout.decode("utf-8").strip()
-                st_mode = path.stat().st_mode
+                try:
+                    st_mode = path.stat().st_mode
+                except OSError:
+                    continue
                 if st_mode & stat.S_IXUSR:
                     mode = "100755"
                 else:
                     mode = "100644"
-            yield rel_path, mode, sha
+                results.append((rel_path, mode, False, None))
+
+    return results
+
+
+def _batch_hash_files(
+    root: Path, env: Dict[str, str], file_paths: List[str]
+) -> Dict[str, str]:
+    """Hash multiple files in a single git hash-object call.
+
+    Uses `git hash-object -w --stdin-paths` which reads file paths from stdin
+    and outputs one SHA per line in the same order.
+    """
+    if not file_paths:
+        return {}
+
+    # git hash-object --stdin-paths expects one path per line
+    input_data = "\n".join(file_paths).encode("utf-8")
+
+    proc = _run_git(
+        ["hash-object", "-w", "--stdin-paths"],
+        cwd=root,
+        env=env,
+        input=input_data,
+        check=True,
+    )
+
+    shas = proc.stdout.decode("utf-8").strip().split("\n")
+
+    # Map paths to their SHAs
+    result: Dict[str, str] = {}
+    for path, sha in zip(file_paths, shas):
+        if sha:
+            result[path] = sha
+
+    return result
+
+
+def _batch_update_index(root: Path, env: Dict[str, str], entries: List[str]) -> None:
+    """Update git index with multiple entries in a single call.
+
+    Uses `git update-index --index-info` which reads entries from stdin
+    in the format: mode SP sha TAB path LF
+    """
+    if not entries:
+        return
+
+    input_data = "\n".join(entries).encode("utf-8")
+
+    _run_git(
+        ["update-index", "--index-info"],
+        cwd=root,
+        env=env,
+        input=input_data,
+        check=True,
+    )
 
 
 def _should_ignore_path(path: Path) -> bool:
@@ -483,7 +687,7 @@ def _update_snapshot_ref(root: Path, env: Dict[str, str], tree: str) -> None:
     )
 
 
-def _write_manifest(root: Path, tree: str, ignore_hash: str) -> None:
+def _write_manifest(root: Path, tree: str, ignore_hash: str, mtime_hash: str) -> None:
     manifest_dir = root / ".fast" / "manifests"
     manifest_data = {
         "created_at": _dt.datetime.now(tz=_dt.timezone.utc).isoformat(),
@@ -492,6 +696,7 @@ def _write_manifest(root: Path, tree: str, ignore_hash: str) -> None:
         "tool_version": _FAST_TCP_VERSION,
         "python": platform.python_version(),
         "ignore_hash": ignore_hash,
+        "mtime_hash": mtime_hash,
     }
     if _manifest_matches(root, manifest_data):
         return
@@ -507,9 +712,16 @@ def _manifest_matches(root: Path, manifest_data: dict[str, Any]) -> bool:
     current = _read_latest_manifest(root)
     if not current:
         return False
-    comparable_fields = ("tree", "kind", "tool_version", "python", "ignore_hash")
+    comparable_fields = (
+        "tree",
+        "kind",
+        "tool_version",
+        "python",
+        "ignore_hash",
+        "mtime_hash",
+    )
     return all(
-        current.get(field) == manifest_data[field] for field in comparable_fields
+        current.get(field) == manifest_data.get(field) for field in comparable_fields
     )
 
 
