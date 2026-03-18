@@ -29,5 +29,6 @@ PACKAGE_SETUP_SUMMARY.md
 .fast
 node_modules/
 .*
+!.github
 !.gitignore
 *_playground/
