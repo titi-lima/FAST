@@ -1,0 +1,16 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '12px', 'lineColor': '#4B5563', 'primaryTextColor': '#0F172A', 'fontFamily': 'Arial'}}}%%
+sequenceDiagram
+    participant R as Test Runner
+    participant C as Snapshot Cache
+    participant F as FAST Engine
+
+    R->>C: Collect test IDs
+    alt Snapshot exists
+        C->>C: Compute Git tree diff
+    else First run
+        C->>C: Create initial snapshot
+        C->>C: Compute Git tree diff
+    end
+    C-->>F: Partition into new / unchanged / deleted
+    F->>F: Prioritize new, then unchanged
+    F-->>R: Combined order (new first, deleted removed)

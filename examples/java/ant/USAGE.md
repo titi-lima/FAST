@@ -15,7 +15,7 @@ From the repo root:
 
 ```bash
 cd examples/java/ant
-fast_tcp init ant
+fast-tcp init ant
 ```
 
 This will:
@@ -56,8 +56,8 @@ ant fast-tcp
 
 ### Configurable properties
 
-- During init: `--algo`, `--repetitions`, and `--mode` (`macros` or `inline`)
-- After init: adjust the `fast-tcp` target in `build.xml` if desired
+- During init: `--project-dir`, `--algo`, and `--repetitions`
+- After init: adjust the generated `fast-tcp` target in `build.xml` if desired
 
 ### Project layout assumptions
 
@@ -70,5 +70,4 @@ ant fast-tcp
 - `.fast/in/selectors.txt` — discovered JUnit5 method selectors
 - `.fast/in/prioritized-selectors.txt` — prioritized JUnit selectors
 - `.fast/out/<dataset>/prioritized/*` — FAST TCP result files (`.pickle`, `.tsv`)
-
 

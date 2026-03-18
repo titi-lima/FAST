@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fast-tcp"
 version = "1.2.0"
 description = "FAST Approaches to Scalable Similarity-based Test Case Prioritization"
-readme = "README.md"
-license = {text = "GPL-3.0"}
+readme = "README_LIBRARY.md"
+license = "GPL-3.0-only"
 authors = [
     {name = "Breno Miranda"},
     {name = "Emilio Cruciani"},
@@ -24,17 +24,16 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Software Development :: Testing",
     "Topic :: Scientific/Engineering",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 dependencies = [
     "datasketch",
     "xxhash",
