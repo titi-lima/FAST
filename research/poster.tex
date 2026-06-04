@@ -50,7 +50,8 @@
     \raggedleft
     {\bfseries\fontsize{28}{32}\selectfont Tiago Lima}\par
     \vspace{0.04in}
-    {\color{soft}\fontsize{21}{25}\selectfont Federal University of Pernambuco\\
+    {\color{soft}\fontsize{21}{25}\selectfont Advisor: Prof. Breno Miranda\\
+    Federal University of Pernambuco\\
     Recife, Brazil \,\textbullet\, \texttt{tmsl@cin.ufpe.br}}
   \end{minipage}
 
@@ -60,8 +61,18 @@
 
 %========================== TWO COLUMNS ==========================
 \col{%
+\heading{What FAST is}
+\textbf{FAST} stands for \emph{FAST Approaches to Similarity-based Testing}, introduced by Breno Miranda and coauthors at ICSE 2018. It is a family of test case prioritization algorithms based on one principle: execute tests that are most \emph{dissimilar} from the tests already selected.
+\begin{itemize}\tight
+  \item Each test is represented as a set: black-box identifiers/content or white-box coverage features.
+  \item MinHash compresses those sets into compact signatures that preserve similarity estimates.
+  \item Locality-sensitive hashing finds diverse candidate tests quickly instead of comparing every pair.
+  \item Variants such as \textbf{FAST-pw}, \textbf{FAST-sqrt}, and \textbf{FAST-one} trade search effort for speed.
+\end{itemize}
+
+\vspace{0.14in}
 \heading{Why it needs a tool}
-The FAST algorithms scaled similarity-based prioritization to a million tests, yet stayed a research prototype. Three barriers blocked everyday CI use:
+FAST approaches scaled similarity-based prioritization to a million tests, yet stayed a research prototype. Three barriers blocked everyday CI use:
 \begin{itemize}\tight
   \item \textbf{Integration friction} --- test representations and orchestration done by hand.
   \item \textbf{No incrementality} --- unchanged tests reprocessed on every run.
@@ -70,7 +81,7 @@ The FAST algorithms scaled similarity-based prioritization to a million tests, y
 
 \vspace{0.14in}
 \heading{What fast-tcp does}
-It packages FAST as a drop-in local tool. A standalone \textbf{Git snapshot cache} detects which tests changed and ranks \textbf{new and modified tests first}, so each run prioritizes only what is new. It runs entirely locally and needs no historical failure data.
+It packages FAST as a drop-in local tool. Framework integrations collect tests, the FAST engine computes the order, and a lightweight snapshot layer puts \textbf{new and modified tests first}. It runs entirely locally and needs no historical failure data.
 
 \vfill
 
@@ -101,8 +112,7 @@ The snapshot is independent of the project's own Git history, so it works even w
 \colorbox{code}{\begin{minipage}{0.95\linewidth}\vspace{0.07in}
 {\ttfamily\fontsize{22}{29}\selectfont
 pip install fast-tcp\\
-fast-tcp init pytest\\
-pytest --fast-tcp
+fast-tcp init <framework>\\
 }\vspace{0.07in}\end{minipage}}\hfill
 \begin{minipage}[b]{0.40\linewidth}
 {\fontsize{19}{24}\selectfont
@@ -123,7 +133,7 @@ JUnit/Ant & Ant macro \\
 \heading{What developers see}
 \begin{center}\includegraphics[width=0.84\linewidth]{figures/debug_output.png}\end{center}
 \vspace{0.04in}
-{\color{soft}\fontsize{19}{24}\selectfont Running \texttt{pytest --fast-tcp --fast-tcp-debug} reports the snapshot diff, the new/unchanged/deleted partition, and a per-stage timing breakdown --- the cost is visible, not hidden inside the runner.}
+{\color{soft}\fontsize{19}{24}\selectfont Running \texttt{pytest --fast-tcp-debug} reports the snapshot diff, the new/unchanged/deleted partition, and a per-stage timing breakdown.}
 
 \vfill
 
@@ -172,7 +182,7 @@ Prioritization  & 9\,ms \\
 \vspace{0.06in}
 {\color{soft}\fontsize{19}{24}\selectfont
 \textbf{Next:} more frameworks, CI integrations, coverage-aware white-box TCP. \quad
-\textbf{Repo:} \href{https://github.com/icse18-FAST/FAST}{github.com/icse18-FAST/FAST} \,\textbullet\, Builds on Miranda et al., ``FAST,'' ICSE 2018.}
+\textbf{Repo:} \href{https://github.com/titi-lima/FAST}{github.com/titi-lima/FAST} \,\textbullet\, Builds on Miranda et al., ``FAST,'' ICSE 2018.}
 }%
 
   \end{document}
