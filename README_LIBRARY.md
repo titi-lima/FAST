@@ -11,18 +11,25 @@
 
 ## Installation
 
-### PyPI
+### TestPyPI
+
+Version `1.3.0` is available on [TestPyPI](https://test.pypi.org/project/fast-tcp/1.3.0/). Install the dependencies from PyPI, then install the package from TestPyPI:
 
 ```bash
-python -m pip install fast-tcp
+python -m pip install datasketch==1.6.5 xxhash
+python -m pip install --index-url https://test.pypi.org/simple/ --no-deps fast-tcp==1.3.0
 ```
+
+The package has not yet been published to production PyPI.
+
+These commands pin `datasketch==1.6.5` because `fast-tcp` 1.3.0 is incompatible with `datasketch` 2.0.
 
 ### From this repository
 
 ```bash
 git clone https://github.com/titi-lima/FAST.git
 cd FAST
-python -m pip install -e .
+python -m pip install -e . datasketch==1.6.5
 ```
 
 Python `3.8+` is the supported baseline for the packaged tool.
@@ -30,7 +37,7 @@ Python `3.8+` is the supported baseline for the packaged tool.
 ## Pytest quick start
 
 ```bash
-python -m pip install fast-tcp pytest
+python -m pip install pytest
 fast-tcp init pytest
 pytest --fast-tcp --fast-tcp-debug
 ```
