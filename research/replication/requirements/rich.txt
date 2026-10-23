@@ -1,0 +1,37 @@
+# Frozen from the recorded full-suite execution; editables installed separately.
+appnope==1.0.0; sys_platform == "darwin"
+asttokens==3.0.2
+attrs==23.2.0
+backcall==0.2.0
+comm==0.2.3
+datasketch==1.6.5
+decorator==5.3.1
+executing==2.3.0
+iniconfig==2.3.1
+ipython==7.34.0
+ipywidgets==8.1.1
+jedi==0.20.1
+jupyterlab-widgets==3.0.9
+markdown-it-py==2.2.0
+matplotlib-inline==0.2.2
+mdurl==0.1.2
+numpy==2.3.0
+packaging==26.3
+parso==0.8.7
+pexpect==4.9.0
+pickleshare==0.7.5
+pluggy==1.7.0
+prompt-toolkit==3.0.53
+psutil==7.2.2
+ptyprocess==0.7.0
+pure-eval==0.2.4
+pygments==2.16.1
+pytest==7.4.4
+scipy==1.17.1
+setuptools==68.0.0
+stack-data==0.6.3
+traitlets==5.16.1
+typing-extensions==4.16.0
+wcwidth==0.9.3
+widgetsnbextension==4.0.16
+xxhash==3.5.0

@@ -1,0 +1,412 @@
+[
+  {
+    "iteration": 0,
+    "tag": "seed",
+    "added": 50,
+    "modified": 0,
+    "deleted": 0,
+    "repo_size_bytes": 185281,
+    "loose_objects": 0,
+    "working_set_bytes": 104857600
+  },
+  {
+    "iteration": 1,
+    "tag": "iter-1",
+    "added": 6,
+    "modified": 28,
+    "deleted": 0,
+    "repo_size_bytes": 223825,
+    "loose_objects": 0,
+    "working_set_bytes": 109576192
+  },
+  {
+    "iteration": 2,
+    "tag": "iter-2",
+    "added": 2,
+    "modified": 19,
+    "deleted": 0,
+    "repo_size_bytes": 237323,
+    "loose_objects": 0,
+    "working_set_bytes": 111149056
+  },
+  {
+    "iteration": 3,
+    "tag": "iter-3",
+    "added": 3,
+    "modified": 25,
+    "deleted": 0,
+    "repo_size_bytes": 246836,
+    "loose_objects": 0,
+    "working_set_bytes": 113246208
+  },
+  {
+    "iteration": 4,
+    "tag": "iter-4",
+    "added": 5,
+    "modified": 32,
+    "deleted": 0,
+    "repo_size_bytes": 260627,
+    "loose_objects": 0,
+    "working_set_bytes": 117964800
+  },
+  {
+    "iteration": 5,
+    "tag": "iter-5",
+    "added": 5,
+    "modified": 19,
+    "deleted": 0,
+    "repo_size_bytes": 270341,
+    "loose_objects": 0,
+    "working_set_bytes": 121110528
+  },
+  {
+    "iteration": 6,
+    "tag": "iter-6",
+    "added": 6,
+    "modified": 29,
+    "deleted": 0,
+    "repo_size_bytes": 277099,
+    "loose_objects": 0,
+    "working_set_bytes": 124256256
+  },
+  {
+    "iteration": 7,
+    "tag": "iter-7",
+    "added": 2,
+    "modified": 21,
+    "deleted": 6,
+    "repo_size_bytes": 270577,
+    "loose_objects": 0,
+    "working_set_bytes": 121110528
+  },
+  {
+    "iteration": 8,
+    "tag": "iter-8",
+    "added": 3,
+    "modified": 30,
+    "deleted": 2,
+    "repo_size_bytes": 273741,
+    "loose_objects": 0,
+    "working_set_bytes": 122683392
+  },
+  {
+    "iteration": 9,
+    "tag": "iter-9",
+    "added": 2,
+    "modified": 24,
+    "deleted": 3,
+    "repo_size_bytes": 272613,
+    "loose_objects": 0,
+    "working_set_bytes": 122159104
+  },
+  {
+    "iteration": 10,
+    "tag": "iter-10",
+    "added": 6,
+    "modified": 32,
+    "deleted": 5,
+    "repo_size_bytes": 273766,
+    "loose_objects": 0,
+    "working_set_bytes": 122683392
+  },
+  {
+    "iteration": 11,
+    "tag": "iter-11",
+    "added": 5,
+    "modified": 29,
+    "deleted": 5,
+    "repo_size_bytes": 274769,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 12,
+    "tag": "iter-12",
+    "added": 3,
+    "modified": 18,
+    "deleted": 6,
+    "repo_size_bytes": 272422,
+    "loose_objects": 0,
+    "working_set_bytes": 122159104
+  },
+  {
+    "iteration": 13,
+    "tag": "iter-13",
+    "added": 2,
+    "modified": 30,
+    "deleted": 2,
+    "repo_size_bytes": 273445,
+    "loose_objects": 0,
+    "working_set_bytes": 122683392
+  },
+  {
+    "iteration": 14,
+    "tag": "iter-14",
+    "added": 6,
+    "modified": 23,
+    "deleted": 3,
+    "repo_size_bytes": 277845,
+    "loose_objects": 0,
+    "working_set_bytes": 124780544
+  },
+  {
+    "iteration": 15,
+    "tag": "iter-15",
+    "added": 2,
+    "modified": 29,
+    "deleted": 2,
+    "repo_size_bytes": 278862,
+    "loose_objects": 0,
+    "working_set_bytes": 125304832
+  },
+  {
+    "iteration": 16,
+    "tag": "iter-16",
+    "added": 2,
+    "modified": 31,
+    "deleted": 6,
+    "repo_size_bytes": 271332,
+    "loose_objects": 0,
+    "working_set_bytes": 121634816
+  },
+  {
+    "iteration": 17,
+    "tag": "iter-17",
+    "added": 6,
+    "modified": 30,
+    "deleted": 5,
+    "repo_size_bytes": 273477,
+    "loose_objects": 0,
+    "working_set_bytes": 122683392
+  },
+  {
+    "iteration": 18,
+    "tag": "iter-18",
+    "added": 5,
+    "modified": 25,
+    "deleted": 3,
+    "repo_size_bytes": 275733,
+    "loose_objects": 0,
+    "working_set_bytes": 123731968
+  },
+  {
+    "iteration": 19,
+    "tag": "iter-19",
+    "added": 3,
+    "modified": 31,
+    "deleted": 2,
+    "repo_size_bytes": 275849,
+    "loose_objects": 0,
+    "working_set_bytes": 123731968
+  },
+  {
+    "iteration": 20,
+    "tag": "iter-20",
+    "added": 6,
+    "modified": 29,
+    "deleted": 6,
+    "repo_size_bytes": 275836,
+    "loose_objects": 0,
+    "working_set_bytes": 123731968
+  },
+  {
+    "iteration": 21,
+    "tag": "iter-21",
+    "added": 4,
+    "modified": 29,
+    "deleted": 2,
+    "repo_size_bytes": 278068,
+    "loose_objects": 0,
+    "working_set_bytes": 124780544
+  },
+  {
+    "iteration": 22,
+    "tag": "iter-22",
+    "added": 5,
+    "modified": 29,
+    "deleted": 2,
+    "repo_size_bytes": 283461,
+    "loose_objects": 0,
+    "working_set_bytes": 127401984
+  },
+  {
+    "iteration": 23,
+    "tag": "iter-23",
+    "added": 2,
+    "modified": 19,
+    "deleted": 6,
+    "repo_size_bytes": 275908,
+    "loose_objects": 0,
+    "working_set_bytes": 123731968
+  },
+  {
+    "iteration": 24,
+    "tag": "iter-24",
+    "added": 3,
+    "modified": 26,
+    "deleted": 5,
+    "repo_size_bytes": 273666,
+    "loose_objects": 0,
+    "working_set_bytes": 122683392
+  },
+  {
+    "iteration": 25,
+    "tag": "iter-25",
+    "added": 3,
+    "modified": 26,
+    "deleted": 3,
+    "repo_size_bytes": 274685,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 26,
+    "tag": "iter-26",
+    "added": 3,
+    "modified": 18,
+    "deleted": 6,
+    "repo_size_bytes": 268267,
+    "loose_objects": 0,
+    "working_set_bytes": 120061952
+  },
+  {
+    "iteration": 27,
+    "tag": "iter-27",
+    "added": 6,
+    "modified": 19,
+    "deleted": 4,
+    "repo_size_bytes": 271546,
+    "loose_objects": 0,
+    "working_set_bytes": 121634816
+  },
+  {
+    "iteration": 28,
+    "tag": "iter-28",
+    "added": 4,
+    "modified": 19,
+    "deleted": 5,
+    "repo_size_bytes": 268394,
+    "loose_objects": 0,
+    "working_set_bytes": 120061952
+  },
+  {
+    "iteration": 29,
+    "tag": "iter-29",
+    "added": 2,
+    "modified": 26,
+    "deleted": 2,
+    "repo_size_bytes": 269417,
+    "loose_objects": 0,
+    "working_set_bytes": 120586240
+  },
+  {
+    "iteration": 30,
+    "tag": "iter-30",
+    "added": 5,
+    "modified": 29,
+    "deleted": 3,
+    "repo_size_bytes": 274710,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 31,
+    "tag": "iter-31",
+    "added": 3,
+    "modified": 24,
+    "deleted": 3,
+    "repo_size_bytes": 274704,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 32,
+    "tag": "iter-32",
+    "added": 3,
+    "modified": 31,
+    "deleted": 3,
+    "repo_size_bytes": 274697,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 33,
+    "tag": "iter-33",
+    "added": 5,
+    "modified": 27,
+    "deleted": 6,
+    "repo_size_bytes": 274578,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 34,
+    "tag": "iter-34",
+    "added": 2,
+    "modified": 22,
+    "deleted": 4,
+    "repo_size_bytes": 272328,
+    "loose_objects": 0,
+    "working_set_bytes": 122159104
+  },
+  {
+    "iteration": 35,
+    "tag": "iter-35",
+    "added": 3,
+    "modified": 23,
+    "deleted": 2,
+    "repo_size_bytes": 274469,
+    "loose_objects": 0,
+    "working_set_bytes": 123207680
+  },
+  {
+    "iteration": 36,
+    "tag": "iter-36",
+    "added": 5,
+    "modified": 22,
+    "deleted": 5,
+    "repo_size_bytes": 271424,
+    "loose_objects": 0,
+    "working_set_bytes": 121634816
+  },
+  {
+    "iteration": 37,
+    "tag": "iter-37",
+    "added": 3,
+    "modified": 20,
+    "deleted": 3,
+    "repo_size_bytes": 272454,
+    "loose_objects": 0,
+    "working_set_bytes": 122159104
+  },
+  {
+    "iteration": 38,
+    "tag": "iter-38",
+    "added": 3,
+    "modified": 24,
+    "deleted": 3,
+    "repo_size_bytes": 272465,
+    "loose_objects": 0,
+    "working_set_bytes": 122159104
+  },
+  {
+    "iteration": 39,
+    "tag": "iter-39",
+    "added": 4,
+    "modified": 19,
+    "deleted": 5,
+    "repo_size_bytes": 268294,
+    "loose_objects": 0,
+    "working_set_bytes": 120061952
+  },
+  {
+    "iteration": 40,
+    "tag": "iter-40",
+    "added": 2,
+    "modified": 25,
+    "deleted": 2,
+    "repo_size_bytes": 268295,
+    "loose_objects": 0,
+    "working_set_bytes": 120061952
+  }
+]

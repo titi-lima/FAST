@@ -6,7 +6,7 @@
 
 - `fast_tcp/`: the installable Python package and framework integrations
 - `examples/`: runnable example projects for pytest, Vitest, Go `testing`, and Ant/JUnit
-- `research/`: the paper draft, figures, notebooks, and demo materials
+- [research/](research/README.md): experiment scripts, pinned environments, recorded results, paper draft, and demo materials
 - [PUBLISHING.md](PUBLISHING.md): PyPI and TestPyPI release instructions
 
 ## Installation
@@ -14,7 +14,7 @@
 ### From source
 
 ```bash
-git clone https://github.com/icse18-FAST/FAST.git
+git clone https://github.com/titi-lima/FAST.git
 cd FAST
 python -m pip install -e .
 ```
@@ -77,7 +77,9 @@ The implementation is based on:
 
 > Breno Miranda, Emilio Cruciani, Roberto Verdecchia, and Antonia Bertolino. 2018. FAST Approaches to Scalable Similarity-based Test Case Prioritization. ICSE 2018. DOI: [10.1145/3180155.3180210](https://doi.org/10.1145/3180155.3180210)
 
-The current tooling, paper draft, and artifact notes for this repository live under [research/](research/).
+Experiment scripts, pinned project revisions and dependencies, complete test reports, and instructions to regenerate the measured figures are in [research/replication/](research/replication/README.md). They run from this repository; the Overleaf project is not required. Start with the offline audit of the recorded results, or follow the instructions to rerun the experiments.
+
+The paper draft, exploratory notebooks, and demo materials are indexed in [research/](research/README.md).
 
 ## Repository notes
 

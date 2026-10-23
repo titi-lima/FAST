@@ -1,0 +1,8 @@
+{
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "python": "3.11.13",
+  "git": "git version 2.49.0",
+  "seed": 42,
+  "iterations": 40,
+  "payload": "repeated labels, highly compressible"
+}

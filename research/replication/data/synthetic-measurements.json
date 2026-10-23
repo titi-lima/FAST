@@ -1,0 +1,202 @@
+[
+  {
+    "iteration": 1,
+    "tests": 55,
+    "baseline_wall_s": 0.27177708300587256,
+    "fast_wall_s": 0.3405793749989243,
+    "partition_s": 4.2791987652890384e-05,
+    "preparation_s": 0.0019177920039510354,
+    "prioritization_s": 0.002481208008248359,
+    "driver_s": 0.06433383301191498
+  },
+  {
+    "iteration": 2,
+    "tests": 60,
+    "baseline_wall_s": 0.28928425000049174,
+    "fast_wall_s": 0.3224796660069842,
+    "partition_s": 4.7416004235856235e-05,
+    "preparation_s": 0.0019674169889185578,
+    "prioritization_s": 0.00259649999497924,
+    "driver_s": 0.0526974579988746
+  },
+  {
+    "iteration": 3,
+    "tests": 65,
+    "baseline_wall_s": 0.2672867499932181,
+    "fast_wall_s": 0.33564758399734274,
+    "partition_s": 0.0007642080017831177,
+    "preparation_s": 0.0012472079979488626,
+    "prioritization_s": 0.002847499999916181,
+    "driver_s": 0.057151667002472095
+  },
+  {
+    "iteration": 4,
+    "tests": 70,
+    "baseline_wall_s": 0.28351408398884814,
+    "fast_wall_s": 0.34053712501190603,
+    "partition_s": 5.149999924469739e-05,
+    "preparation_s": 0.0013631250039907172,
+    "prioritization_s": 0.003357333000167273,
+    "driver_s": 0.05504629199276678
+  },
+  {
+    "iteration": 5,
+    "tests": 75,
+    "baseline_wall_s": 0.2677789580047829,
+    "fast_wall_s": 0.32415791699895635,
+    "partition_s": 4.416699812281877e-05,
+    "preparation_s": 0.0014458749938057736,
+    "prioritization_s": 0.0035169170005246997,
+    "driver_s": 0.054580750002060086
+  },
+  {
+    "iteration": 6,
+    "tests": 80,
+    "baseline_wall_s": 0.2678773329971591,
+    "fast_wall_s": 0.3220159170014085,
+    "partition_s": 3.8708996726199985e-05,
+    "preparation_s": 0.001425791997462511,
+    "prioritization_s": 0.0037583329976769164,
+    "driver_s": 0.05302612499508541
+  },
+  {
+    "iteration": 7,
+    "tests": 85,
+    "baseline_wall_s": 0.2738455420039827,
+    "fast_wall_s": 0.32531379199645016,
+    "partition_s": 0.00011133300722576678,
+    "preparation_s": 0.0013587909925263375,
+    "prioritization_s": 0.004184167002676986,
+    "driver_s": 0.05323520798992831
+  },
+  {
+    "iteration": 8,
+    "tests": 90,
+    "baseline_wall_s": 0.2677533329988364,
+    "fast_wall_s": 0.32487770800071303,
+    "partition_s": 5.266699008643627e-05,
+    "preparation_s": 0.0013735420070588589,
+    "prioritization_s": 0.004518250003457069,
+    "driver_s": 0.05341558299551252
+  },
+  {
+    "iteration": 9,
+    "tests": 95,
+    "baseline_wall_s": 0.27612074998614844,
+    "fast_wall_s": 0.32430579198990017,
+    "partition_s": 6.645800021942705e-05,
+    "preparation_s": 0.0014462499966612086,
+    "prioritization_s": 0.005055625006207265,
+    "driver_s": 0.05470070900628343
+  },
+  {
+    "iteration": 10,
+    "tests": 95,
+    "baseline_wall_s": 0.28445266700873617,
+    "fast_wall_s": 0.34732200000144076,
+    "partition_s": 5.862499529030174e-05,
+    "preparation_s": 0.006242250005016103,
+    "prioritization_s": 0.003940166992833838,
+    "driver_s": 0.06364516699977685
+  },
+  {
+    "iteration": 11,
+    "tests": 100,
+    "baseline_wall_s": 0.2836176659911871,
+    "fast_wall_s": 0.33212437501060776,
+    "partition_s": 5.800000508315861e-05,
+    "preparation_s": 0.0014149159978842363,
+    "prioritization_s": 0.005558667005971074,
+    "driver_s": 0.05482516600750387
+  },
+  {
+    "iteration": 12,
+    "tests": 105,
+    "baseline_wall_s": 0.2831587499968009,
+    "fast_wall_s": 0.33233304200985003,
+    "partition_s": 0.00011945799633394927,
+    "preparation_s": 0.001486665991251357,
+    "prioritization_s": 0.005742499997722916,
+    "driver_s": 0.055811625003116205
+  },
+  {
+    "iteration": 13,
+    "tests": 110,
+    "baseline_wall_s": 0.2756563339935383,
+    "fast_wall_s": 0.33316408400423825,
+    "partition_s": 5.341599171515554e-05,
+    "preparation_s": 0.001420166008756496,
+    "prioritization_s": 0.006221499992534518,
+    "driver_s": 0.05554037500405684
+  },
+  {
+    "iteration": 14,
+    "tests": 115,
+    "baseline_wall_s": 0.2777872080041561,
+    "fast_wall_s": 0.33421820899820887,
+    "partition_s": 8.691700350027531e-05,
+    "preparation_s": 0.001616000008652918,
+    "prioritization_s": 0.006724582999595441,
+    "driver_s": 0.057163999998010695
+  },
+  {
+    "iteration": 15,
+    "tests": 120,
+    "baseline_wall_s": 0.2769110829976853,
+    "fast_wall_s": 0.3366837499925168,
+    "partition_s": 6.02080108365044e-05,
+    "preparation_s": 0.001513750001322478,
+    "prioritization_s": 0.0070523339963983744,
+    "driver_s": 0.055979875003686175
+  },
+  {
+    "iteration": 16,
+    "tests": 125,
+    "baseline_wall_s": 0.27970949999871664,
+    "fast_wall_s": 0.3566787089948775,
+    "partition_s": 0.0001249170018127188,
+    "preparation_s": 0.0017152910004369915,
+    "prioritization_s": 0.008260459013399668,
+    "driver_s": 0.06490712499362417
+  },
+  {
+    "iteration": 17,
+    "tests": 130,
+    "baseline_wall_s": 0.2961796250019688,
+    "fast_wall_s": 0.3503317909926409,
+    "partition_s": 7.045800157357007e-05,
+    "preparation_s": 0.0014783329970669001,
+    "prioritization_s": 0.008169207998435013,
+    "driver_s": 0.06093049999617506
+  },
+  {
+    "iteration": 18,
+    "tests": 135,
+    "baseline_wall_s": 0.2836652910045814,
+    "fast_wall_s": 0.3422672500018962,
+    "partition_s": 6.750000466126949e-05,
+    "preparation_s": 0.0016312920051859692,
+    "prioritization_s": 0.008629457995994017,
+    "driver_s": 0.060245208005653694
+  },
+  {
+    "iteration": 19,
+    "tests": 140,
+    "baseline_wall_s": 0.2872934999904828,
+    "fast_wall_s": 0.3438945830130251,
+    "partition_s": 0.00010641600238159299,
+    "preparation_s": 0.001603666998562403,
+    "prioritization_s": 0.009017708012834191,
+    "driver_s": 0.05912229199020658
+  },
+  {
+    "iteration": 20,
+    "tests": 140,
+    "baseline_wall_s": 0.2845199169969419,
+    "fast_wall_s": 0.3455628340016119,
+    "partition_s": 0.00010412500705569983,
+    "preparation_s": 0.0063769590051379055,
+    "prioritization_s": 0.006941416999325156,
+    "driver_s": 0.06196774999261834
+  }
+]

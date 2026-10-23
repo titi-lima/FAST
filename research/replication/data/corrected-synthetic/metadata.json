@@ -1,0 +1,33 @@
+{
+  "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "logical_cpus": 10,
+  "tool_commit": "dfb9725b91a621c6bdc0c642315395e7befa33ec",
+  "tool_sha256": {
+    "fast_tcp/__init__.py": "81a415a4e729d25b40181cb1fa1f55e42c9e389c753efe69e4f9010a75737d6a",
+    "fast_tcp/cli.py": "9df58d7076d627b1f89399f09bc2c0c69ed8a0064f7d9e162b25e282bf49c854",
+    "fast_tcp/fast.py": "6d6a8b49502333bb156945f89be0c8bdc8dca075d6774240aab2070750a5fb89",
+    "fast_tcp/integrations/__init__.py": "ec1c4f356654a027579e467a4c8577886da26aeb6eebad26b2f586cd740f18fa",
+    "fast_tcp/integrations/ant/__init__.py": "44d440d796e5b411b7e950d9a8cb7e33b2999ccb48b665fed5371b4f2c462331",
+    "fast_tcp/integrations/ant/cli.py": "f85cccc881fa58c82c1425db02af57ec44d83a8d597d998426e586adf5e61262",
+    "fast_tcp/integrations/gotest/__init__.py": "3b60bcc40bd0badafc985a644cecbda4d1b6c264e79d82c6ab53dfb9097cc2bd",
+    "fast_tcp/integrations/gotest/templates/build-prioritized-tests.py": "9dfe37c915c672a01e52e926f39fad7869dc14b559120140ff43cc80d5db2655",
+    "fast_tcp/integrations/gotest/templates/generate-bbox.py": "ffa736732f7753f8e4dd53f3757097ca14e61b9b62c792a74965850bf7dab549",
+    "fast_tcp/integrations/gotest/templates/tests-map.py": "98b7c7ade70a44c48ac292552b86e4cd285de8219be868c6d5c91333eeb62458",
+    "fast_tcp/integrations/pytest/__init__.py": "50b91a408b9dd5e14ba4ee2b9b438f1b8af6a3c433927397122bd0b0f5c63158",
+    "fast_tcp/integrations/pytest/plugin.py": "9a190d883f41f804b0a3eed3ddb5b657137b5c3a7863bf567e931820d48d1178",
+    "fast_tcp/integrations/vitest/__init__.py": "abe717d859e7a472d2b0040d231f782f9cc14d364ee971d068b6c284f0253887",
+    "fast_tcp/prioritize.py": "44bb522624dd04844a786324e831d364d5d6d6af4d686b1aa83b66a4cf706ddc",
+    "fast_tcp/snapshot_cache.py": "1e5f9035a24a4a9cc62b189c1d142183c5ee871bba3e4329e1fad41f1df2c0d1"
+  },
+  "harness_sha256": {
+    "audit_results.py": "8e6f40c384815a347f4ea8c768beac1affa5c507b1c91b090149017e00133709",
+    "common.py": "f9138e35954104c03e376639fec06b129e9d4e153386863a95f0b0961ac7bd1d",
+    "fast_verification_audit.py": "c3f516b137e7af2ebd80df72ba07bce9eb334cfd00b76a45b3aace741792785a",
+    "measure_snapshot.py": "4a15f3712ac6287afef885aa250920bd30710c4239f9b2a76e89fbe2ed733554",
+    "measure_synthetic.py": "5f40367361067bb071db4ed57438ef0909e38a94e19d8d84a649b7fca73e88f0",
+    "prepare_projects.py": "4362f4e1e6720ef3cbcd83101a225aeeb6e4c6abde9b8eb96d4561e00cd48aae",
+    "render_case_study.py": "340de88b304fea6939feae0dd171780b6ff3b6501c001fa60214e6a1c8950236",
+    "render_measured_trace.py": "7073bac6baf1cf5ec55b5729456ac633aa672b39f9eb1979af846d5b53fad33d",
+    "verify_projects.py": "1c3a4709e6cb175ef9ccbb934acd4345a415d2cf45e4430bf5cb14fd233b1ccd"
+  }
+}

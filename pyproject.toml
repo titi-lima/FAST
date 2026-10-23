@@ -40,10 +40,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/icse18-FAST/FAST"
-Documentation = "https://github.com/icse18-FAST/FAST/blob/master/README.md"
-Repository = "https://github.com/icse18-FAST/FAST"
-"Bug Tracker" = "https://github.com/icse18-FAST/FAST/issues"
+Homepage = "https://github.com/titi-lima/FAST"
+Documentation = "https://github.com/titi-lima/FAST/blob/master/README.md"
+Repository = "https://github.com/titi-lima/FAST"
+"Bug Tracker" = "https://github.com/titi-lima/FAST/issues"
 
 [project.scripts]
 fast-tcp = "fast_tcp.cli:main"

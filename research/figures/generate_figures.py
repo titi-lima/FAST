@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Generate all publication-ready figures for the ICSE paper."""
+"""Legacy exploratory figures, including constructed timing data.
+
+Do not use this script to regenerate the measured publication figures.
+See ../replication/README.md for the raw reports and measured renderers.
+"""
+
+import sys
+
+if __name__ == "__main__" and "--legacy" not in sys.argv:
+    raise SystemExit("Legacy plots include constructed timings. Use research/replication/ instead, or pass --legacy to inspect the old plots.")
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches

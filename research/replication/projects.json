@@ -1,0 +1,26 @@
+{
+  "requests": {
+    "url": "https://github.com/psf/requests.git",
+    "ref": "v2.31.0",
+    "commit": "147c8511ddbfa5e8f71bbf5c18ede0c4ceb3bba4",
+    "plugins": ["pytest_httpbin.plugin", "pytest_mock"]
+  },
+  "rich": {
+    "url": "https://github.com/Textualize/rich.git",
+    "ref": "v13.7.0",
+    "commit": "fd981823644ccf50d685ac9c0cfe8e1e56c9dd35",
+    "plugins": []
+  },
+  "click": {
+    "url": "https://github.com/pallets/click.git",
+    "ref": "8.1.7",
+    "commit": "874ca2bc1c30d93a4ac6e36a15ed685eafe89097",
+    "plugins": []
+  },
+  "attrs": {
+    "url": "https://github.com/python-attrs/attrs.git",
+    "ref": "23.2.0",
+    "commit": "9e443b18527dc96b194e92805fa751cbf8434ba9",
+    "plugins": ["_hypothesis_pytestplugin", "pytest_mypy_plugins.collect"]
+  }
+}

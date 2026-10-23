@@ -20,7 +20,7 @@ python -m pip install fast-tcp
 ### From this repository
 
 ```bash
-git clone https://github.com/icse18-FAST/FAST.git
+git clone https://github.com/titi-lima/FAST.git
 cd FAST
 python -m pip install -e .
 ```
@@ -125,4 +125,4 @@ This implementation is derived from:
 
 > Breno Miranda, Emilio Cruciani, Roberto Verdecchia, and Antonia Bertolino. 2018. FAST Approaches to Scalable Similarity-based Test Case Prioritization. ICSE 2018. DOI: [10.1145/3180155.3180210](https://doi.org/10.1145/3180155.3180210)
 
-Repository-level documentation and research artifacts are available in [README.md](README.md) and `research/`.
+Repository-level documentation is in [README.md](README.md). Experiment scripts, pinned environments, recorded full-suite reports, and reproduction instructions are in [research/replication/](research/replication/README.md).

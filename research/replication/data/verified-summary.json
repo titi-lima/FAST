@@ -1,0 +1,117 @@
+{
+  "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "projects": [
+    {
+      "project": "requests",
+      "valid": true,
+      "commit": "147c8511ddbfa5e8f71bbf5c18ede0c4ceb3bba4",
+      "collected": 596,
+      "outcomes": {
+        "passed": 582,
+        "xfailed": 1,
+        "skipped": 13
+      },
+      "repetitions": 5,
+      "baseline_mean_s": 66.2404656668019,
+      "baseline_std_s": 0.07354596414261755,
+      "fast_mean_s": 59.45333961660217,
+      "fast_std_s": 0.05473783686134427,
+      "cold_wall_s": 60.732445125002414,
+      "warm_fast_driver_mean_s": 0.11611629139806609,
+      "warm_prioritization_mean_s": 0.08529274180182256,
+      "verified_executions": 12,
+      "wall_difference_s": -6.787126050199724,
+      "wall_difference_percent": -10.24619314172676
+    },
+    {
+      "project": "click",
+      "valid": true,
+      "commit": "874ca2bc1c30d93a4ac6e36a15ed685eafe89097",
+      "collected": 611,
+      "outcomes": {
+        "passed": 588,
+        "xfailed": 1,
+        "skipped": 22
+      },
+      "repetitions": 5,
+      "baseline_mean_s": 0.7113262250000844,
+      "baseline_std_s": 0.02635840142388263,
+      "fast_mean_s": 0.8724044998001773,
+      "fast_std_s": 0.04169822051700762,
+      "cold_wall_s": 2.153824249995523,
+      "warm_fast_driver_mean_s": 0.11799269140465185,
+      "warm_prioritization_mean_s": 0.08422565000073519,
+      "verified_executions": 12,
+      "wall_difference_s": 0.16107827480009296,
+      "wall_difference_percent": 22.644782258670958
+    },
+    {
+      "project": "attrs",
+      "valid": true,
+      "commit": "9e443b18527dc96b194e92805fa751cbf8434ba9",
+      "collected": 1410,
+      "outcomes": {
+        "passed": 1405,
+        "skipped": 4,
+        "xfailed": 1
+      },
+      "repetitions": 5,
+      "baseline_mean_s": 23.606789874998505,
+      "baseline_std_s": 0.3455059898469301,
+      "fast_mean_s": 25.26243577460118,
+      "fast_std_s": 0.7686044074706304,
+      "cold_wall_s": 26.480193249997683,
+      "warm_fast_driver_mean_s": 0.5229637585958699,
+      "warm_prioritization_mean_s": 0.487929166801041,
+      "verified_executions": 12,
+      "wall_difference_s": 1.6556458996026748,
+      "wall_difference_percent": 7.0134309169928155
+    },
+    {
+      "project": "rich",
+      "valid": true,
+      "commit": "fd981823644ccf50d685ac9c0cfe8e1e56c9dd35",
+      "collected": 826,
+      "outcomes": {
+        "passed": 803,
+        "skipped": 23
+      },
+      "repetitions": 5,
+      "baseline_mean_s": 3.6528426583943654,
+      "baseline_std_s": 0.0286473221025893,
+      "fast_mean_s": 3.8457575997977984,
+      "fast_std_s": 0.005293033289187652,
+      "wall_difference_s": 0.19291494140343302,
+      "wall_difference_percent": 5.281227784616112,
+      "cold_wall_s": 7.40785220899852,
+      "warm_fast_driver_mean_s": 0.19949330000090412,
+      "warm_prioritization_mean_s": 0.15317994999641088,
+      "verified_executions": 12
+    }
+  ],
+  "tool_sha256": {
+    "fast_tcp/__init__.py": "81a415a4e729d25b40181cb1fa1f55e42c9e389c753efe69e4f9010a75737d6a",
+    "fast_tcp/cli.py": "9df58d7076d627b1f89399f09bc2c0c69ed8a0064f7d9e162b25e282bf49c854",
+    "fast_tcp/fast.py": "6d6a8b49502333bb156945f89be0c8bdc8dca075d6774240aab2070750a5fb89",
+    "fast_tcp/integrations/__init__.py": "ec1c4f356654a027579e467a4c8577886da26aeb6eebad26b2f586cd740f18fa",
+    "fast_tcp/integrations/ant/__init__.py": "44d440d796e5b411b7e950d9a8cb7e33b2999ccb48b665fed5371b4f2c462331",
+    "fast_tcp/integrations/ant/cli.py": "f85cccc881fa58c82c1425db02af57ec44d83a8d597d998426e586adf5e61262",
+    "fast_tcp/integrations/gotest/__init__.py": "3b60bcc40bd0badafc985a644cecbda4d1b6c264e79d82c6ab53dfb9097cc2bd",
+    "fast_tcp/integrations/gotest/templates/build-prioritized-tests.py": "9dfe37c915c672a01e52e926f39fad7869dc14b559120140ff43cc80d5db2655",
+    "fast_tcp/integrations/gotest/templates/generate-bbox.py": "ffa736732f7753f8e4dd53f3757097ca14e61b9b62c792a74965850bf7dab549",
+    "fast_tcp/integrations/gotest/templates/tests-map.py": "98b7c7ade70a44c48ac292552b86e4cd285de8219be868c6d5c91333eeb62458",
+    "fast_tcp/integrations/pytest/__init__.py": "50b91a408b9dd5e14ba4ee2b9b438f1b8af6a3c433927397122bd0b0f5c63158",
+    "fast_tcp/integrations/pytest/plugin.py": "9a190d883f41f804b0a3eed3ddb5b657137b5c3a7863bf567e931820d48d1178",
+    "fast_tcp/integrations/vitest/__init__.py": "abe717d859e7a472d2b0040d231f782f9cc14d364ee971d068b6c284f0253887",
+    "fast_tcp/prioritize.py": "44bb522624dd04844a786324e831d364d5d6d6af4d686b1aa83b66a4cf706ddc",
+    "fast_tcp/snapshot_cache.py": "1e5f9035a24a4a9cc62b189c1d142183c5ee871bba3e4329e1fad41f1df2c0d1"
+  },
+  "tool_commit": "0b05e8bf8979bb717a6938e7d011a9815d2e8cff",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184",
+    "hw.ncpu": "10"
+  },
+  "python": "3.11.13",
+  "method": "5 paired baseline/warm-FAST repetitions in alternating order; separate cold run; per-test identity/outcome equality; no early exit or file exclusions."
+}
