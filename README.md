@@ -16,21 +16,21 @@
 ```bash
 git clone https://github.com/titi-lima/FAST.git
 cd FAST
-python -m pip install -e . datasketch==1.6.5
+python -m pip install -e .
 ```
 
 ### From TestPyPI
 
-Version `1.3.0` is available on [TestPyPI](https://test.pypi.org/project/fast-tcp/1.3.0/). Install the dependencies from PyPI, then install the package from TestPyPI:
+Version `1.3.1` is available on [TestPyPI](https://test.pypi.org/project/fast-tcp/1.3.1/). Install from TestPyPI with PyPI as an additional index for dependencies:
 
 ```bash
-python -m pip install datasketch==1.6.5 xxhash
-python -m pip install --index-url https://test.pypi.org/simple/ --no-deps fast-tcp==1.3.0
+python -m pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  fast-tcp==1.3.1
 ```
 
 The package has not yet been published to production PyPI. Maintainer release instructions are in [PUBLISHING.md](PUBLISHING.md).
-
-These commands pin `datasketch==1.6.5` because `fast-tcp` 1.3.0 is incompatible with `datasketch` 2.0.
 
 ## Quick start with pytest
 
@@ -42,9 +42,9 @@ pytest --fast-tcp --fast-tcp-debug
 
 `fast-tcp init pytest` creates a `.fast/` workspace and updates `pytest.ini` so the package can persist signatures and filesystem snapshots between runs.
 
-## Other supported integrations
+## Other integrations
 
-- `Vitest`: `fast-tcp init vitest` then `npm run test:fast`
+- `Vitest` (experimental scaffold): `fast-tcp init vitest`; successful execution has not been verified
 - `Go testing`: `fast-tcp init gotest` then `bash .fast/tools/gotest/run-fast.sh`
 - `Ant/JUnit`: `fast-tcp init ant` then `ant fast-tcp`
 - Direct CLI: `fast-tcp --test-dir <dir> --algo FAST-pw --entity bbox ...`

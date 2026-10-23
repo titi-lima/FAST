@@ -1,2 +1,2 @@
-datasketch
+datasketch==1.6.5
 xxhash
