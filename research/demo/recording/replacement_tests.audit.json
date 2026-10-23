@@ -1,0 +1,402 @@
+{
+  "collected": [
+    "tests/test_zz_discounts.py::test_discount[1000-0-1000]",
+    "tests/test_zz_discounts.py::test_discount[100-0-100]",
+    "tests/test_zz_discounts.py::test_discount[0-0-0]",
+    "tests/test_zz_discounts.py::test_discount[100-10-90]",
+    "tests/test_zz_discounts.py::test_discount[250-0-250]",
+    "tests/test_zz_discounts.py::test_discount[25-0-25]",
+    "tests/test_zz_discounts.py::test_discount[5-0-5]",
+    "tests/test_zz_discounts.py::test_discount[500-0-500]",
+    "tests/test_zz_discounts.py::test_discount[10-0-10]",
+    "tests/test_zz_discounts.py::test_discount[50-0-50]",
+    "tests/test_zz_discounts.py::test_discount[100-20-80]",
+    "tests/test_zz_discounts.py::test_discount[75-0-75]",
+    "tests/test_zero_discount.py::test_zero_discount[100-100]",
+    "tests/test_totals.py::test_totals[100-20-True-132]",
+    "tests/test_shipping.py::test_shipping[50-True-12]",
+    "tests/test_tax.py::test_tax[100-5-5]",
+    "tests/test_shipping.py::test_shipping[49-True-12]",
+    "tests/test_zero_discount.py::test_zero_discount[25-25]",
+    "tests/test_shipping.py::test_shipping[100-False-0]",
+    "tests/test_shipping.py::test_shipping[100-True-12]",
+    "tests/test_subtotal.py::test_subtotal[prices4-30]",
+    "tests/test_zero_discount.py::test_zero_discount[1000-1000]",
+    "tests/test_tax.py::test_tax[50-20-10]",
+    "tests/test_subtotal.py::test_subtotal[prices6-3]",
+    "tests/test_shipping.py::test_shipping[10-True-12]",
+    "tests/test_subtotal.py::test_subtotal[prices0-0]",
+    "tests/test_tax.py::test_tax[200-5-10]",
+    "tests/test_tax.py::test_tax[50-10-5]",
+    "tests/test_tax.py::test_tax[100-0-0]",
+    "tests/test_subtotal.py::test_subtotal[prices3-6]",
+    "tests/test_tax.py::test_tax[100-10-10]",
+    "tests/test_totals.py::test_totals[10-10-True-23]",
+    "tests/test_totals.py::test_totals[100-0-True-112]",
+    "tests/test_zero_discount.py::test_zero_discount[5-5]",
+    "tests/test_totals.py::test_totals[100-0-False-100]",
+    "tests/test_tax.py::test_tax[100-20-20]",
+    "tests/test_zero_discount.py::test_zero_discount[10-10]",
+    "tests/test_shipping.py::test_shipping[10-False-5]",
+    "tests/test_subtotal.py::test_subtotal[prices2-3]",
+    "tests/test_tax.py::test_tax[0-20-0]",
+    "tests/test_zero_discount.py::test_zero_discount[500-500]",
+    "tests/test_shipping.py::test_shipping[0-True-12]",
+    "tests/test_shipping.py::test_shipping[0-False-5]",
+    "tests/test_zero_discount.py::test_zero_discount[250-250]",
+    "tests/test_shipping.py::test_shipping[49-False-5]",
+    "tests/test_totals.py::test_totals[100-20-False-120]",
+    "tests/test_totals.py::test_totals[0-0-False-5]",
+    "tests/test_subtotal.py::test_subtotal[prices9-100]",
+    "tests/test_zz_discount.py::test_ten_percent_discount",
+    "tests/test_zero_discount.py::test_zero_discount[75-75]",
+    "tests/test_subtotal.py::test_subtotal[prices7-100]",
+    "tests/test_tax.py::test_tax[10-10-1]",
+    "tests/test_shipping.py::test_shipping[50-False-0]",
+    "tests/test_zz_discount.py::test_twenty_percent_discount",
+    "tests/test_totals.py::test_totals[0-0-True-12]",
+    "tests/test_subtotal.py::test_subtotal[prices5-5]",
+    "tests/test_totals.py::test_totals[10-0-False-15]",
+    "tests/test_totals.py::test_totals[50-0-False-50]",
+    "tests/test_zero_discount.py::test_zero_discount[50-50]",
+    "tests/test_totals.py::test_totals[50-10-False-55]",
+    "tests/test_zero_discount.py::test_zero_discount[0-0]",
+    "tests/test_tax.py::test_tax[24.99-20-5]",
+    "tests/test_subtotal.py::test_subtotal[prices1-1]",
+    "tests/test_subtotal.py::test_subtotal[prices8-0.3]"
+  ],
+  "reports": {
+    "tests/test_zz_discounts.py::test_discount[1000-0-1000]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[100-0-100]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[0-0-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[100-10-90]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[250-0-250]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[25-0-25]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[5-0-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[500-0-500]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[10-0-10]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[50-0-50]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[100-20-80]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[75-0-75]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[100-100]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[100-20-True-132]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[50-True-12]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[100-5-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[49-True-12]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[25-25]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[100-False-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[100-True-12]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices4-30]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[1000-1000]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[50-20-10]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices6-3]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[10-True-12]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices0-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[200-5-10]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[50-10-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[100-0-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices3-6]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[100-10-10]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[10-10-True-23]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[100-0-True-112]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[5-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[100-0-False-100]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[100-20-20]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[10-10]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[10-False-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices2-3]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[0-20-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[500-500]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[0-True-12]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[0-False-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[250-250]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[49-False-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[100-20-False-120]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[0-0-False-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices9-100]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discount.py::test_ten_percent_discount": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[75-75]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices7-100]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[10-10-1]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_shipping.py::test_shipping[50-False-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discount.py::test_twenty_percent_discount": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[0-0-True-12]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices5-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[10-0-False-15]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[50-0-False-50]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[50-50]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_totals.py::test_totals[50-10-False-55]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zero_discount.py::test_zero_discount[0-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[24.99-20-5]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices1-1]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_subtotal.py::test_subtotal[prices8-0.3]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    }
+  },
+  "exitstatus": 0,
+  "source_sha256": {
+    "conftest.py": "48101c4a00b811fb751a0388532233c1c24874341d482ecec20520680a0f86d7",
+    "pricing.py": "2d8f6c27f05ea5660dc369f688cad8b67c5ef330a60e659d98bbd047449687c4",
+    "tests/test_shipping.py": "d9dbd502e88bb5ec29b4ef8a2be32f60823de7f0cb514213072c3222f83cadd0",
+    "tests/test_subtotal.py": "ff5b9e6cfd8697a44a567abd5e72c41d8ba80afee305f3e191e178885ec7d6da",
+    "tests/test_tax.py": "d60d625e0a0f1a2399fc7c8eb43224c954703169317f4312494f49e516086dc4",
+    "tests/test_totals.py": "4a6dabdab0633df207fc715f39306294979cc41d435458fbed177b21d41ce3ba",
+    "tests/test_zero_discount.py": "30709de2b631c0a8f9420da8e8a486a5fde589d1307fd5913bddbd07f87ebc85",
+    "tests/test_zz_discount.py": "7b211d749457643813256f1f3ef3e523a1f228b129e6dc5ec03e621003752764",
+    "tests/test_zz_discounts.py": "81d9d3b41fe9d3e9590106e3a693e0a89d2d3025baacfc0683dcff9ba7fa824d"
+  }
+}

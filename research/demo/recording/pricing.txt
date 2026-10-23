@@ -1,0 +1,21 @@
+
+def subtotal(prices):
+    return round(sum(prices), 2)
+
+
+def shipping_cost(amount, express=False):
+    if express:
+        return 12
+    return 0 if amount >= 50 else 5
+
+
+def tax(amount, rate):
+    return round(amount * rate / 100, 2)
+
+
+def discounted_price(price, percent):
+    return price * (1 - percent / 10)
+
+
+def total_price(amount, rate=0, express=False):
+    return amount + tax(amount, rate) + shipping_cost(amount, express)

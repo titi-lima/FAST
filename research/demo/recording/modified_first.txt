@@ -1,0 +1,24 @@
+
+[1m============================================ test session starts =============================================[0m
+platform darwin -- Python 3.11.13, pytest-9.1.1, pluggy-1.7.0 -- /Users/tiagol./Documents/FAST/output/research/publish-replication/output/research/release-1.3.1-env/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/fast-three-minute-final/project
+configfile: pytest.ini
+plugins: fast-tcp-1.3.1
+[1mcollecting ... [0mcollected 52 items
+
+tests/test_tax.py::test_tax[0-20-0] [32mPASSED[0m[32m                                                             [  1%][0m
+tests/test_tax.py::test_tax[200-5-10] [32mPASSED[0m[32m                                                           [  3%][0m
+tests/test_tax.py::test_tax[50-10-5] [32mPASSED[0m[32m                                                            [  5%][0m
+tests/test_tax.py::test_tax[50-20-10] [32mPASSED[0m[32m                                                           [  7%][0m
+tests/test_tax.py::test_tax[100-0-0] [32mPASSED[0m[32m                                                            [  9%][0m
+tests/test_tax.py::test_tax[100-10-10] [32mPASSED[0m[32m                                                          [ 11%][0m
+tests/test_tax.py::test_tax[100-20-20] [32mPASSED[0m[32m                                                          [ 13%][0m
+tests/test_tax.py::test_tax[24.99-20-5] [32mPASSED[0m[32m                                                         [ 15%][0m
+tests/test_tax.py::test_tax[100-5-5] [32mPASSED[0m[32m                                                            [ 17%][0m
+tests/test_tax.py::test_tax[10-10-1] [32mPASSED[0m[32m                                                            [ 19%][0m
+tests/test_zero_discount.py::test_zero_discount[100-100] [32mPASSED[0m[32m                                        [ 21%][0m
+tests/test_totals.py::test_totals[100-20-True-132] [32mPASSED[0m[32m                                              [ 23%][0m
+tests/test_shipping.py::test_shipping[50-True-12] [32mPASSED[0m[32m                                               [ 25%][0m
+tests/test_shipping.py::test_shipping[49-True-12] [32mPASSED[0m[32m                                               [ 26%][0m
+[32m============================================= [32m[1m52 passed[0m[32m in 2.00s[0m[32m =============================================[0m

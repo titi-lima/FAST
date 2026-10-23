@@ -1,0 +1,114 @@
+{
+  "k": 5,
+  "permutations": 10,
+  "scope": "FAST-pw comparison of supplied candidates; LSH filtering omitted; A is an explicit example seed.",
+  "tests": {
+    "A": {
+      "nodeid": "tests/test_shipping.py::test_shipping[49-False-5]",
+      "display": "test_shipping[49-False-5]",
+      "hashvalues": [
+        140728822,
+        12868968,
+        58941201,
+        21368511,
+        254379830,
+        77070134,
+        62356607,
+        581852559,
+        9340998,
+        47130843
+      ]
+    },
+    "B": {
+      "nodeid": "tests/test_shipping.py::test_shipping[50-False-0]",
+      "display": "test_shipping[50-False-0]",
+      "hashvalues": [
+        105180652,
+        12868968,
+        58941201,
+        21368511,
+        416051597,
+        53381011,
+        62356607,
+        86484238,
+        9340998,
+        47130843
+      ]
+    },
+    "C": {
+      "nodeid": "tests/test_tax.py::test_tax[100-20-20]",
+      "display": "test_tax[100-20-20]",
+      "hashvalues": [
+        126547623,
+        11491973,
+        151062655,
+        21368511,
+        146460407,
+        69811538,
+        670399742,
+        975317387,
+        9340998,
+        36259636
+      ]
+    }
+  },
+  "windows": [
+    "shipp",
+    "hippi",
+    "ippin",
+    "pping"
+  ],
+  "window_start": 11,
+  "shingle_examples": [
+    {
+      "text": "test_",
+      "h1": 140728822
+    },
+    {
+      "text": "shipp",
+      "h1": 2845566813
+    },
+    {
+      "text": "hippi",
+      "h1": 2702967612
+    },
+    {
+      "text": "ippin",
+      "h1": 1922898465
+    }
+  ],
+  "minimum_shingle": "test_",
+  "decisions": [
+    {
+      "scores": {
+        "B": 0.6,
+        "C": 0.2
+      },
+      "selected": "C"
+    },
+    {
+      "scores": {
+        "B": 0.4
+      },
+      "selected": "B"
+    }
+  ],
+  "order": [
+    "A",
+    "C",
+    "B"
+  ],
+  "cumulative_ac": [
+    126547623,
+    11491973,
+    58941201,
+    21368511,
+    146460407,
+    69811538,
+    62356607,
+    581852559,
+    9340998,
+    36259636
+  ],
+  "verified": true
+}

@@ -5,6 +5,7 @@ Start with [replication/README.md](replication/README.md) for the experiment com
 | Material | Status |
 | --- | --- |
 | [replication/](replication/README.md) | Verified real-project case study, executed synthetic workload, standalone snapshot experiment, recorded evidence, and reproduction instructions |
+| [demo/](demo/README.md) | Three-minute terminal/Vim demonstration with a computed shingles/MinHash illustration, recording scripts, and execution evidence |
 | [snapshot_cache_growth.ipynb](snapshot_cache_growth.ipynb) | Original snapshot experiment, including saved notebook output; standalone version in `replication/measure_snapshot.py` |
 | [real_project_case_study.ipynb](real_project_case_study.ipynb) | Preliminary case study; superseded by the complete-suite measurements in `replication/data/` |
 | [incremental_benefit_benchmark.ipynb](incremental_benefit_benchmark.ipynb) | Exploratory collection-only benchmark; does not measure complete test execution |

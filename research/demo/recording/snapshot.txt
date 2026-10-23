@@ -1,0 +1,9 @@
+
+conftest.py
+pricing.py
+pytest.ini
+tests/test_shipping.py
+tests/test_subtotal.py
+tests/test_tax.py
+tests/test_totals.py
+tests/test_zero_discount.py

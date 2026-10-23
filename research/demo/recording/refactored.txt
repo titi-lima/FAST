@@ -1,0 +1,4 @@
+
+[DEBUG] Partition summary: 12 new / 40 unchanged / 12 deleted
+[DEBUG] Total FAST TCP time: 0.1378s
+[32m[32m[1m52 passed[0m[32m in 1.98s[0m[0m
