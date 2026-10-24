@@ -1,7 +1,7 @@
 {
   "collected": [
-    "tests/test_zz_discount.py::test_twenty_percent_discount",
     "tests/test_zz_discount.py::test_ten_percent_discount",
+    "tests/test_zz_discount.py::test_twenty_percent_discount",
     "tests/test_zero_discount.py::test_zero_discount[100-100]",
     "tests/test_totals.py::test_totals[100-20-True-132]",
     "tests/test_shipping.py::test_shipping[50-True-12]",
@@ -54,7 +54,7 @@
     "tests/test_subtotal.py::test_subtotal[prices8-0.3]"
   ],
   "reports": {
-    "tests/test_zz_discount.py::test_twenty_percent_discount": {
+    "tests/test_zz_discount.py::test_ten_percent_discount": {
       "setup": "passed",
       "call": "failed",
       "teardown": "passed"

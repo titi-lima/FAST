@@ -1,3 +1,3 @@
 
-Created /private/tmp/fast-three-minute-final/project/pytest.ini
+Created /private/tmp/fast-three-minute-plain-commands/project/pytest.ini
 Done. Run: pytest

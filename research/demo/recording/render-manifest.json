@@ -1,17 +1,17 @@
 {
   "path": "/Users/tiagol./Documents/FAST/research/demo/recording/fast-tcp-demo.mp4",
   "duration_s": 180,
-  "source_duration_s": 170.775,
-  "terminal_playback_rate": 1.0150204545454546,
+  "source_duration_s": 172.666,
+  "terminal_playback_rate": 1.0134610389610388,
   "code_entry_pacing": [
     {
-      "start": 100.576,
-      "end": 129.4997,
+      "start": 102.8563,
+      "end": 136.0423,
       "speed": 2.0,
       "reason": "Live entry of the parameterized replacement tests; code-entry time lapse."
     }
   ],
-  "visual_start_s": 46.074933554854475,
+  "visual_start_s": 43.97603685454884,
   "visual_duration_s": 26,
   "fps": 20,
   "resolution": [

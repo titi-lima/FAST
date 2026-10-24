@@ -1,4 +1,26 @@
 
+[DEBUG] Detected snapshot root at /private/tmp/fast-three-minute-plain-commands/project
+[DEBUG] Snapshot diff resolved: old_tree=3483da8025e44cef1f0e77ca46272f20296afcd6 new_tree=3483da8025e44cef1f0e77ca46272f20296afcd6
+[DEBUG] Filesystem changes: +0 ~0 -0
+[DEBUG]   (no tracked file changes)
+[DEBUG] No previous snapshot available for input file; treating as new suite
+[DEBUG] Recovered previous test suite from cache (52 tests)
+[DEBUG] Starting partition phase
 [DEBUG] Partition summary: 0 new / 52 unchanged / 0 deleted
-[DEBUG] Total FAST TCP time: 0.0354s
-[32m[32m[1m52 passed[0m[32m in 1.89s[0m[0m
+[DEBUG]   No test-level changes detected
+[DEBUG]   Partition time: 0.0000s
+[DEBUG] Starting preparation phase (k=5, r=1, b=10)
+[DEBUG]   Preparation time: 0.0002s
+[DEBUG] Starting prioritization phase
+[DEBUG]   Prioritization time: 0.0023s
+[DEBUG]   Prioritized order preview (52 total): 8, 47, 38, 9, 23, 5, 44, 10, 15, 50, ...
+[DEBUG] Stored current test suite in cache for .fast/suite-bbox.txt
+
+[DEBUG] ═════════════════════════════════════════
+[DEBUG] Partition time: 0.0000s
+[DEBUG] Preparation time: 0.0002s
+[DEBUG] Prioritization time: 0.0023s
+[DEBUG] Total FAST TCP time: 0.0280s
+[DEBUG] ═════════════════════════════════════════
+[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                   [100%][0m
+[32m[32m[1m52 passed[0m[32m in 1.90s[0m[0m

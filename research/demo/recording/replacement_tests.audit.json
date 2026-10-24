@@ -1,6 +1,6 @@
 {
   "collected": [
-    "tests/test_zz_discounts.py::test_discount[1000-0-1000]",
+    "tests/test_zz_discounts.py::test_discount[50-0-50]",
     "tests/test_zz_discounts.py::test_discount[100-0-100]",
     "tests/test_zz_discounts.py::test_discount[0-0-0]",
     "tests/test_zz_discounts.py::test_discount[100-10-90]",
@@ -9,9 +9,9 @@
     "tests/test_zz_discounts.py::test_discount[5-0-5]",
     "tests/test_zz_discounts.py::test_discount[500-0-500]",
     "tests/test_zz_discounts.py::test_discount[10-0-10]",
-    "tests/test_zz_discounts.py::test_discount[50-0-50]",
     "tests/test_zz_discounts.py::test_discount[100-20-80]",
     "tests/test_zz_discounts.py::test_discount[75-0-75]",
+    "tests/test_zz_discounts.py::test_discount[1000-0-1000]",
     "tests/test_zero_discount.py::test_zero_discount[100-100]",
     "tests/test_totals.py::test_totals[100-20-True-132]",
     "tests/test_shipping.py::test_shipping[50-True-12]",
@@ -66,7 +66,7 @@
     "tests/test_subtotal.py::test_subtotal[prices8-0.3]"
   ],
   "reports": {
-    "tests/test_zz_discounts.py::test_discount[1000-0-1000]": {
+    "tests/test_zz_discounts.py::test_discount[50-0-50]": {
       "setup": "passed",
       "call": "passed",
       "teardown": "passed"
@@ -111,17 +111,17 @@
       "call": "passed",
       "teardown": "passed"
     },
-    "tests/test_zz_discounts.py::test_discount[50-0-50]": {
-      "setup": "passed",
-      "call": "passed",
-      "teardown": "passed"
-    },
     "tests/test_zz_discounts.py::test_discount[100-20-80]": {
       "setup": "passed",
       "call": "passed",
       "teardown": "passed"
     },
     "tests/test_zz_discounts.py::test_discount[75-0-75]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_zz_discounts.py::test_discount[1000-0-1000]": {
       "setup": "passed",
       "call": "passed",
       "teardown": "passed"

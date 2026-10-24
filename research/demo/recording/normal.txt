@@ -12,4 +12,4 @@
 [36m[1m========================================== short test summary info ===========================================[0m
 [31mFAILED[0m tests/test_zz_discount.py::[1mtest_twenty_percent_discount[0m - assert -100.0 == 80
 [31m!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![0m
-[31m[31m[1m1 failed[0m, [32m50 passed[0m[31m in 1.89s[0m[0m
+[31m[31m[1m1 failed[0m, [32m50 passed[0m[31m in 1.82s[0m[0m

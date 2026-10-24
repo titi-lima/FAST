@@ -14,7 +14,7 @@ ROOT = HERE.parents[1]
 OUT = Path(os.environ.get("FAST_DEMO_OUTPUT", ROOT / "output/video/three-minute"))
 PROJECT = Path(os.environ.get("FAST_DEMO_PROJECT", "/tmp/fast-three-minute-demo/project"))
 VENV = Path(os.environ.get("FAST_DEMO_VENV", sys.prefix))
-PACE = float(os.environ.get("FAST_DEMO_PACE", "1"))
+PACE = float(os.environ.get("FAST_DEMO_PACE", "1.18"))
 ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 READY = "\x1b]777;ready\x07"
 
@@ -130,7 +130,7 @@ def main():
         terminal.expect_exact("demo$ ")
         clean = ANSI.sub("", captured)
         record = {"command": text, "output": captured}
-        (OUT / f"{label}.txt").write_text(captured)
+        (OUT / f"{label}.txt").write_text(captured.replace("\r\n", "\n").replace("\r", "\n"))
         if total is not None:
             audit = json.loads((PROJECT / ".fast/last-demo-run.json").read_text())
             assert len(audit["collected"]) == total, (label, audit)
@@ -160,7 +160,7 @@ def main():
         terminal.expect_exact("demo$ ")
 
     def trace(label, total, passed, partition=None):
-        clean = command(label, "pytest -q --fast-tcp-debug | grep -E 'Partition summary|Total FAST TCP time|passed'",
+        clean = command(label, "pytest -q --fast-tcp-debug",
                         total=total, passed=passed)
         if partition:
             assert partition in clean, (label, clean)
@@ -215,11 +215,15 @@ def main():
 
     scene("change an existing tax test")
     vim_open("tests/test_tax.py")
-    type_text(":%s/(25, 20/(24.99, 20/\n", .09)
+    terminal.send("/25, 20\r")
+    pause(.6)
+    terminal.send("cw")
+    type_text("24.99", .18)
+    terminal.send("\x1b")
     pause(1.5)
     vim_save()
     assert "(24.99, 20, 5)" in (PROJECT / "tests/test_tax.py").read_text()
-    command("modified_first", "pytest -v | sed -n '1,22p;$p'", total=52, passed=52,
+    command("modified_first", "pytest -v", total=52, passed=52,
             first_prefix="tests/test_tax.py")
 
     scene("consolidate the discount tests")

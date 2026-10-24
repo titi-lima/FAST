@@ -1,4 +1,31 @@
 
+[DEBUG] Detected snapshot root at /private/tmp/fast-three-minute-plain-commands/project
+[DEBUG] Snapshot diff resolved: old_tree=<none> new_tree=bb6435f7554d81bdc4cd857382e08fbb6bf6aec0
+[DEBUG] Filesystem changes: +8 ~0 -0
+[DEBUG]   [ADDED] conftest.py
+[DEBUG]   [ADDED] pricing.py
+[DEBUG]   [ADDED] pytest.ini
+[DEBUG]   [ADDED] tests/test_shipping.py
+[DEBUG]   [ADDED] tests/test_subtotal.py
+[DEBUG]   [ADDED] tests/test_tax.py
+[DEBUG]   [ADDED] tests/test_totals.py
+[DEBUG]   [ADDED] tests/test_zero_discount.py
+[DEBUG] Starting partition phase
 [DEBUG] Partition summary: 50 new / 0 unchanged / 0 deleted
-[DEBUG] Total FAST TCP time: 0.1275s
-[32m[32m[1m50 passed[0m[32m in 1.92s[0m[0m
+[DEBUG]   New tests: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50
+[DEBUG]   Partition time: 0.0000s
+[DEBUG] Starting preparation phase (k=5, r=1, b=10)
+[DEBUG]   Preparation time: 0.0085s
+[DEBUG] Starting prioritization phase
+[DEBUG]   Prioritization time: 0.0030s
+[DEBUG]   Prioritized order preview (50 total): 32, 47, 38, 9, 23, 8, 44, 5, 10, 15, ...
+[DEBUG] Stored current test suite in cache for .fast/suite-bbox.txt
+
+[DEBUG] ═════════════════════════════════════════
+[DEBUG] Partition time: 0.0000s
+[DEBUG] Preparation time: 0.0085s
+[DEBUG] Prioritization time: 0.0030s
+[DEBUG] Total FAST TCP time: 0.1479s
+[DEBUG] ═════════════════════════════════════════
+[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                     [100%][0m
+[32m[32m[1m50 passed[0m[32m in 1.91s[0m[0m

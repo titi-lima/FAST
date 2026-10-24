@@ -1,4 +1,41 @@
 
+[DEBUG] Detected snapshot root at /private/tmp/fast-three-minute-plain-commands/project
+[DEBUG] Snapshot diff resolved: old_tree=4ca0d57eccf510ca2e1ad2999f2fa7a1facb804d new_tree=3483da8025e44cef1f0e77ca46272f20296afcd6
+[DEBUG] Filesystem changes: +0 ~0 -2
+[DEBUG]   [DELETED] tests/test_zero_discount.py
+[DEBUG]   [DELETED] tests/test_zz_discount.py
+[DEBUG] No previous snapshot available for input file; treating as new suite
+[DEBUG] Recovered previous test suite from cache (64 tests)
+[DEBUG] Invalidated cached tests: 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52
+[DEBUG]   -> Invalidated cached test 41 (dependency changed)
+[DEBUG]   -> Invalidated cached test 42 (dependency changed)
+[DEBUG]   -> Invalidated cached test 43 (dependency changed)
+[DEBUG]   -> Invalidated cached test 44 (dependency changed)
+[DEBUG]   -> Invalidated cached test 45 (dependency changed)
+[DEBUG]   -> Invalidated cached test 46 (dependency changed)
+[DEBUG]   -> Invalidated cached test 47 (dependency changed)
+[DEBUG]   -> Invalidated cached test 48 (dependency changed)
+[DEBUG]   -> Invalidated cached test 49 (dependency changed)
+[DEBUG]   -> Invalidated cached test 50 (dependency changed)
+[DEBUG]   -> Invalidated cached test 51 (dependency changed)
+[DEBUG]   -> Invalidated cached test 52 (dependency changed)
+[DEBUG] Starting partition phase
 [DEBUG] Partition summary: 12 new / 40 unchanged / 12 deleted
-[DEBUG] Total FAST TCP time: 0.1378s
-[32m[32m[1m52 passed[0m[32m in 1.98s[0m[0m
+[DEBUG]   New tests: 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52
+[DEBUG]   Deleted tests: 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64
+[DEBUG]   Partition time: 0.0001s
+[DEBUG] Starting preparation phase (k=5, r=1, b=10)
+[DEBUG]   Preparation time: 0.0036s
+[DEBUG] Starting prioritization phase
+[DEBUG]   Prioritization time: 0.0028s
+[DEBUG]   Prioritized order preview (52 total): 41, 42, 47, 52, 43, 51, 44, 49, 48, 45, ...
+[DEBUG] Stored current test suite in cache for .fast/suite-bbox.txt
+
+[DEBUG] ═════════════════════════════════════════
+[DEBUG] Partition time: 0.0001s
+[DEBUG] Preparation time: 0.0036s
+[DEBUG] Prioritization time: 0.0028s
+[DEBUG] Total FAST TCP time: 0.1517s
+[DEBUG] ═════════════════════════════════════════
+[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                   [100%][0m
+[32m[32m[1m52 passed[0m[32m in 2.03s[0m[0m

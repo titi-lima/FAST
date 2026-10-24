@@ -6,24 +6,24 @@ The video keeps the plain terminal/Vim presentation. A single 26-second explanat
 
 | Video time | Action |
 | --- | --- |
-| 0:00–0:46 | Inspect the pricing project, initialize pytest, compare cold/warm partitions, inspect snapshot files |
-| 0:46–1:12 | Five-character shingles → computed MinHash signatures → FAST-pw candidate ordering |
-| 1:12–1:30 | Add two discount regression tests in Vim |
-| 1:30–1:40 | Compare normal execution (50 passes before failure) with FAST (the regression fails first) |
-| 1:40–1:49 | Fix the percentage divisor and run all 52 tests |
-| 1:49–2:02 | Edit an existing tax test; its module's ten tests run first |
-| 2:02–2:44 | Consolidate discount cases, verify the replacement tests, remove the old files, inspect the new/unchanged/deleted partition |
-| 2:44–3:00 | Run FAST-one and finish with the unchanged 52-test suite |
+| 0:00–0:44 | Inspect the pricing project, initialize pytest, compare cold/warm partitions, inspect snapshot files |
+| 0:44–1:10 | Five-character shingles → computed MinHash signatures → FAST-pw candidate ordering |
+| 1:10–1:31 | Add two discount regression tests in Vim |
+| 1:31–1:41 | Compare normal execution (50 passes before failure) with FAST (the regression fails first) |
+| 1:41–1:52 | Fix the percentage divisor and run all 52 tests |
+| 1:52–2:04 | Edit an existing tax test; its module's ten tests run first |
+| 2:04–2:47 | Consolidate discount cases, verify the replacement tests, remove the old files, inspect the new/unchanged/deleted partition |
+| 2:47–3:00 | Run FAST-one and finish with the unchanged 52-test suite |
 
 ## Evidence and scope
 
-The terminal output comes from real subprocesses. `demo_observer.py` records collection order, setup/call/teardown outcomes, exit status, and source hashes without changing ordering. `recording/evidence.json` and the individual `.audit.json` files preserve the results, including the two intentionally stopped failing runs. The complete passing runs execute every collected test.
+The terminal output comes from real subprocesses. All pytest output is unfiltered. `demo_observer.py` records collection order, setup/call/teardown outcomes, exit status, and source hashes without changing ordering. `recording/evidence.json` and the individual `.audit.json` files preserve the results, including the two intentionally stopped failing runs. The complete passing runs execute every collected test.
 
 The pricing project is a constructed demonstration. A visible `conftest.py` fixture adds the same 30 ms delay per test used by the earlier short recording, so test progress is visible. The example's timings are not benchmark evidence.
 
 The illustration uses three collected pytest node IDs and actual five-character shingle sets. `make_visual_data.py` computes the ten-component signatures with the package's `generate_signature`, checks their componentwise minima, and calls its `select_next_tests` for the candidate decisions. The displayed similarity estimates are 6/10 versus 2/10 relative to A, then 4/10 for B relative to the merged A+C signature. A is an explicit example seed. This illustrates candidate ranking; LSH candidate generation and the full suite's random initial choice are outside this small illustration. Hash values are shortened to hexadecimal prefixes for legibility; comparisons use full values.
 
-The raw PTY capture is 170.775 seconds. One 28.924-second code-entry passage plays at 2×; the other terminal actions run approximately 1.015×. Together with the 26-second illustration, the result is exactly 180 seconds. No idle footage is inserted. The original timestamps and pacing decisions are preserved in the asciicast, `pacing.json`, and `render-manifest.json`.
+The raw PTY capture is 172.666 seconds. One 33.186-second code-entry passage plays at 2×; the other terminal actions run approximately 1.013×. Together with the 26-second illustration, the result is exactly 180 seconds. No idle footage is inserted. The original timestamps and pacing decisions are preserved in the asciicast, `pacing.json`, and `render-manifest.json`.
 
 ## Reproduce
 

@@ -1,10 +1,10 @@
 {
   "collected": [
-    "tests/test_tax.py::test_tax[0-20-0]",
     "tests/test_tax.py::test_tax[200-5-10]",
     "tests/test_tax.py::test_tax[50-10-5]",
-    "tests/test_tax.py::test_tax[50-20-10]",
     "tests/test_tax.py::test_tax[100-0-0]",
+    "tests/test_tax.py::test_tax[0-20-0]",
+    "tests/test_tax.py::test_tax[50-20-10]",
     "tests/test_tax.py::test_tax[100-10-10]",
     "tests/test_tax.py::test_tax[100-20-20]",
     "tests/test_tax.py::test_tax[24.99-20-5]",
@@ -54,11 +54,6 @@
     "tests/test_subtotal.py::test_subtotal[prices8-0.3]"
   ],
   "reports": {
-    "tests/test_tax.py::test_tax[0-20-0]": {
-      "setup": "passed",
-      "call": "passed",
-      "teardown": "passed"
-    },
     "tests/test_tax.py::test_tax[200-5-10]": {
       "setup": "passed",
       "call": "passed",
@@ -69,12 +64,17 @@
       "call": "passed",
       "teardown": "passed"
     },
-    "tests/test_tax.py::test_tax[50-20-10]": {
+    "tests/test_tax.py::test_tax[100-0-0]": {
       "setup": "passed",
       "call": "passed",
       "teardown": "passed"
     },
-    "tests/test_tax.py::test_tax[100-0-0]": {
+    "tests/test_tax.py::test_tax[0-20-0]": {
+      "setup": "passed",
+      "call": "passed",
+      "teardown": "passed"
+    },
+    "tests/test_tax.py::test_tax[50-20-10]": {
       "setup": "passed",
       "call": "passed",
       "teardown": "passed"
